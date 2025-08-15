@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dashboard Panen Aceh Utara</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+  <!-- Navbar -->
+  <nav class="bg-green-700 text-white p-4 shadow-md">
+    <div class="container mx-auto flex justify-between items-center">
+      <h1 class="text-xl font-bold">Panen Aceh Utara</h1>
+      <ul class="flex space-x-4">
+        <li><a href="#beranda" class="hover:underline">Beranda</a></li>
+        <li><a href="#grafik" class="hover:underline">Grafik</a></li>
+        <li><a href="#peta" class="hover:underline">Peta</a></li>
+        <li><a href="#tentang" class="hover:underline">Tentang</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <section id="beranda" class="bg-green-100 py-16 text-center">
+    <h2 class="text-3xl font-bold">Visualisasi Hasil Panen Aceh Utara</h2>
+    <p class="mt-2 text-lg">Data 5 Tahun Terakhir: Lengkap, Interaktif, Informatif</p>
+    <a href="#grafik" class="mt-6 inline-block bg-green-700 text-white px-6 py-2 rounded">Lihat Data</a>
+  </section>
+
+  <!-- Ringkasan Statistik -->
+  <section class="container mx-auto py-10 px-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="bg-white p-6 rounded shadow">
+      <h3 class="text-xl font-bold">Total Panen</h3>
+      <p class="text-2xl text-green-700">💼 120.000 ton</p>
+    </div>
+    <div class="bg-white p-6 rounded shadow">
+      <h3 class="text-xl font-bold">Komoditas Terbanyak</h3>
+      <p class="text-2xl text-green-700">🌾 Padi</p>
+    </div>
+    <div class="bg-white p-6 rounded shadow">
+      <h3 class="text-xl font-bold">Tahun Terbaik</h3>
+      <p class="text-2xl text-green-700">📅 2022</p>
+    </div>
+  </section>
+
+  <!-- Grafik Tren -->
+  <section id="grafik" class="container mx-auto py-10 px-4">
+    <h2 class="text-2xl font-bold mb-4">Grafik Tren Panen per Tahun</h2>
+    <div id="chart-container" class="bg-white p-6 rounded shadow">
+      <!-- Tempat grafik JS seperti Chart.js / ApexCharts -->
+      <canvas id="grafikPanen"></canvas>
+    </div>
+  </section>
+
+  <!-- Peta Persebaran -->
+  <section id="peta" class="container mx-auto py-10 px-4">
+    <h2 class="text-2xl font-bold mb-4">Peta Persebaran Hasil Panen</h2>
+    <div id="map" class="h-96 bg-gray-300 rounded shadow">
+      <!-- Tempat peta Leaflet -->
+    </div>
+  </section>
+
+  <!-- Komoditas Unggulan -->
+  <section class="container mx-auto py-10 px-4">
+    <h2 class="text-2xl font-bold mb-4">Komoditas Unggulan</h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="bg-white p-4 rounded shadow">🌽 Jagung</div>
+      <div class="bg-white p-4 rounded shadow">🌾 Padi</div>
+      <div class="bg-white p-4 rounded shadow">🌱 Kedelai</div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer id="tentang" class="bg-green-700 text-white text-center py-6 mt-10">
+    <p>© 2025 Panen Aceh Utara • Data dari BPS & Kementan</p>
+    <p>Divisi Kominfo BEM</p>
+  </footer>
+
+</body>
+</html>
