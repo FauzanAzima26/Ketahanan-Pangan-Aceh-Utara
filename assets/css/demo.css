@@ -17,10 +17,17 @@
   -ms-flex-pack: center;
   justify-content: center;
   display: -ms-flexbox;
-  display: flex;
-  width: 34px;
-  height: 24px;
+  /* display: flex; */
+  width: 44px;
+  height: 34px;
 }
+
+.app-brand-logo.demo img {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
 
 .app-brand-logo.demo svg {
   width: 35px;
@@ -28,7 +35,7 @@
 }
 
 .app-brand-text.demo {
-  font-size: 1.375rem;
+  font-size: 1rem;
 }
 
 /* ! For .layout-navbar-fixed added fix padding top tpo .layout-page */

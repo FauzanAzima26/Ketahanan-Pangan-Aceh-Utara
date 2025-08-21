@@ -29549,7 +29549,6 @@ html:not(.layout-footer-fixed) .content-wrapper {
   flex-shrink: 0;
   opacity: 1;
   transition: opacity 0.3s ease-in-out;
-  margin-inline-start: 0.75rem !important;
 }
 
 .app-brand-img-collapsed {
