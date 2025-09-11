@@ -1,715 +1,615 @@
 <!DOCTYPE html>
 
-<html
-  lang="en"
-  class="light-style layout-navbar-fixed layout-menu-fixed layout-compact"
-  dir="ltr"
-  data-theme="theme-default"
-  data-assets-path="../../assets/"
-  data-template="vertical-menu-template-starter"
-  data-style="light"
->
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
-    />
+<html lang="en" class="light-style layout-navbar-fixed layout-menu-fixed layout-compact" dir="ltr"
+  data-theme="theme-default" data-assets-path="../../assets/" data-template="vertical-menu-template-starter"
+  data-style="light">
 
-    <title>Page 1 - Starter Kit | Vuexy - Bootstrap Admin Template</title>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0" />
 
-    <meta name="description" content="" />
+  <title>Page 1 - Starter Kit | Vuexy - Bootstrap Admin Template</title>
 
-    <link
-      rel="stylesheet"
-      href="assets/vendor/css/pages/front-page-landing.css"
-    />
+  <meta name="description" content="" />
 
-    <!-- Favicon -->
-    <link
-      rel="icon"
-      type="image/x-icon"
-      href="../../assets/img/favicon/favicon.ico"
-    />
+  <link rel="stylesheet" href="assets/vendor/css/pages/front-page-landing.css" />
 
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&ampdisplay=swap"
-      rel="stylesheet"
-    />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" />
 
-    <link rel="stylesheet" href="../../assets/vendor/fonts/tabler-icons.css" />
-    <!-- <link rel="stylesheet" href="../../assets/vendor/fonts/fontawesome.css" /> -->
-    <!-- <link rel="stylesheet" href="../../assets/vendor/fonts/flag-icons.css" /> -->
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="../../assets/img/favicon/favicon.ico" />
 
-    <!-- Core CSS -->
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&ampdisplay=swap"
+    rel="stylesheet" />
 
-    <link
-      rel="stylesheet"
-      href="../../assets/vendor/css/rtl/core.css"
-      class="template-customizer-core-css"
-    />
-    <link
-      rel="stylesheet"
-      href="../../assets/vendor/css/rtl/theme-default.css"
-      class="template-customizer-theme-css"
-    />
+  <link rel="stylesheet" href="../../assets/vendor/fonts/tabler-icons.css" />
+  <!-- <link rel="stylesheet" href="../../assets/vendor/fonts/fontawesome.css" /> -->
+  <!-- <link rel="stylesheet" href="../../assets/vendor/fonts/flag-icons.css" /> -->
 
-    <link rel="stylesheet" href="../../assets/css/demo.css" />
+  <!-- Core CSS -->
 
-    <!-- Vendors CSS -->
-    <link
-      rel="stylesheet"
-      href="../../assets/vendor/libs/node-waves/node-waves.css"
-    />
+  <link rel="stylesheet" href="../../assets/vendor/css/rtl/core.css" class="template-customizer-core-css" />
+  <link rel="stylesheet" href="../../assets/vendor/css/rtl/theme-default.css" class="template-customizer-theme-css" />
 
-    <link
-      rel="stylesheet"
-      href="../../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css"
-    />
+  <link rel="stylesheet" href="../../assets/css/demo.css" />
 
-    <!-- Page CSS -->
+  <!-- Vendors CSS -->
+  <link rel="stylesheet" href="../../assets/vendor/libs/node-waves/node-waves.css" />
 
-    <!-- Helpers -->
-    <script src="../../assets/vendor/js/helpers.js"></script>
-    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
+  <link rel="stylesheet" href="../../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css" />
 
-    <!--? Template customizer: To hide customizer set displayCustomizer value false in config.js.  -->
-    <script src="../../assets/vendor/js/template-customizer.js"></script>
+  <!-- Page CSS -->
 
-    <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
-    <script src="../../assets/js/config.js"></script>
+  <!-- Helpers -->
+  <script src="../../assets/vendor/js/helpers.js"></script>
+  <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
 
-    <!-- chart -->
-    <link
-      rel="stylesheet"
-      href="assets/vendor/libs/apex-charts/apex-charts.css"
-    />
+  <!--? Template customizer: To hide customizer set displayCustomizer value false in config.js.  -->
+  <script src="../../assets/vendor/js/template-customizer.js"></script>
 
-    <!-- map -->
-    <link
-      href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/css/jsvectormap.min.css"
-      rel="stylesheet"
-    />
+  <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
+  <script src="../../assets/js/config.js"></script>
 
-    <link
-      rel="stylesheet"
-      href="//cdn.datatables.net/2.3.3/css/dataTables.dataTables.min.css"
-    />
-  </head>
+  <!-- chart -->
+  <link rel="stylesheet" href="assets/vendor/libs/apex-charts/apex-charts.css" />
 
-  <body>
-    <!-- Layout wrapper -->
-    <div class="layout-wrapper layout-content-navbar">
-      <div class="layout-container">
-        <!-- Menu -->
+  <!-- map -->
+  <link href="https://cdn.jsdelivr.net/npm/jsvectormap/dist/css/jsvectormap.min.css" rel="stylesheet" />
 
-        <aside
-          id="layout-menu"
-          class="layout-menu menu-vertical menu bg-menu-theme"
-        >
-          <div class="app-brand demo">
-            <a href="index.html" class="app-brand-link">
-              <span class="app-brand-logo demo">
-                <img
-                  src="assets/img/Lambang_kab_acehutara.png"
-                  alt="Logo"
-                  class="w-px-32 h-auto"
-                />
-              </span>
-              <span class="app-brand-text demo menu-text fw-bold"
-                >Ketahanan Pangan</span
-              >
+  <link rel="stylesheet" href="//cdn.datatables.net/2.3.3/css/dataTables.dataTables.min.css" />
+
+  <style>
+    /* Pastikan semua card di row pertama punya tinggi yang sama */
+    .row.mb-4 .card.h-100 {
+      min-height: 200px;
+      /* Atur sesuai kebutuhan */
+    }
+
+    /* Pastikan chart dan card-body punya tinggi proporsional */
+    .row.mb-4 .card .salesChart {
+      height: 80px !important;
+    }
+
+    .row.mb-4 .card-body {
+      padding-top: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+
+    /* Rata-kan judul dan angka */
+    .row.mb-4 .card-title {
+      font-size: 14px;
+    }
+
+    .row.mb-4 .card-body h4 {
+      font-size: 18px;
+    }
+
+    .row.mb-4 .card-body small {
+      font-size: 12px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Layout wrapper -->
+  <div class="layout-wrapper layout-content-navbar">
+    <div class="layout-container">
+      <!-- Menu -->
+
+      <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
+        <div class="app-brand demo">
+          <a href="index.html" class="app-brand-link">
+            <span class="app-brand-logo demo">
+              <img src="assets/img/Lambang_kab_acehutara.png" alt="Logo" class="w-px-32 h-auto" />
+            </span>
+            <span class="app-brand-text demo menu-text fw-bold">Ketahanan Pangan</span>
+          </a>
+
+          <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+            <i class="ti menu-toggle-icon d-none d-xl-block align-middle"></i>
+            <i class="ti ti-x d-block d-xl-none ti-md align-middle"></i>
+          </a>
+        </div>
+
+        <div class="menu-inner-shadow"></div>
+
+        <ul class="menu-inner py-1">
+          <!-- Dashboard -->
+          <li class="menu-item active">
+            <a href="index.html" class="menu-link">
+              <i class="menu-icon tf-icons ti ti-smart-home"></i>
+              <div data-i18n="Page 1">Dashboard</div>
             </a>
+          </li>
 
-            <a
-              href="javascript:void(0);"
-              class="layout-menu-toggle menu-link text-large ms-auto"
-            >
-              <i class="ti menu-toggle-icon d-none d-xl-block align-middle"></i>
-              <i class="ti ti-x d-block d-xl-none ti-md align-middle"></i>
+          <!-- Detail Kecamatan (Dropdown) -->
+          <li class="menu-item">
+            <a href="javascript:void(0);" class="menu-link menu-toggle">
+              <i class="menu-icon tf-icons ti ti-app-window"></i>
+              <div data-i18n="Page 2">Detail Kecamatan</div>
+            </a>
+            <ul class="menu-sub">
+              <li class="menu-item">
+                <a href="page-2.html?kec=Lhoksukon" class="menu-link">
+                  <div>Kecamatan 1</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="page-2.html?kec=TanahLuas" class="menu-link">
+                  <div>Kecamatan 2</div>
+                </a>
+              </li>
+              <li class="menu-item">
+                <a href="page-2.html?kec=Sawang" class="menu-link">
+                  <div>Kecamatan 3</div>
+                </a>
+              </li>
+              <!-- Tambah kecamatan lain di sini -->
+            </ul>
+          </li>
+        </ul>
+      </aside>
+      <!-- / Menu -->
+
+      <!-- Layout container -->
+      <div class="layout-page">
+        <!-- Navbar -->
+        <nav
+          class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
+          id="layout-navbar">
+          <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
+            <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
+              <i class="ti ti-menu-2 ti-md"></i>
             </a>
           </div>
 
-          <div class="menu-inner-shadow"></div>
-
-          <ul class="menu-inner py-1">
-            <!-- Dashboard -->
-            <li class="menu-item active">
-              <a href="index.html" class="menu-link">
-                <i class="menu-icon tf-icons ti ti-smart-home"></i>
-                <div data-i18n="Page 1">Dashboard</div>
-              </a>
-            </li>
-
-            <!-- Detail Kecamatan (Dropdown) -->
-            <li class="menu-item">
-              <a href="javascript:void(0);" class="menu-link menu-toggle">
-                <i class="menu-icon tf-icons ti ti-app-window"></i>
-                <div data-i18n="Page 2">Detail Kecamatan</div>
-              </a>
-              <ul class="menu-sub">
-                <li class="menu-item">
-                  <a href="page-2.html?kec=Lhoksukon" class="menu-link">
-                    <div>Lhoksukon</div>
-                  </a>
-                </li>
-                <li class="menu-item">
-                  <a href="page-2.html?kec=TanahLuas" class="menu-link">
-                    <div>Tanah Luas</div>
-                  </a>
-                </li>
-                <li class="menu-item">
-                  <a href="page-2.html?kec=Sawang" class="menu-link">
-                    <div>Sawang</div>
-                  </a>
-                </li>
-                <!-- Tambah kecamatan lain di sini -->
-              </ul>
-            </li>
-          </ul>
-        </aside>
-        <!-- / Menu -->
-
-        <!-- Layout container -->
-        <div class="layout-page">
-          <!-- Navbar -->
-          <nav
-            class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
-            id="layout-navbar"
-          >
-            <div
-              class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none"
-            >
-              <a
-                class="nav-item nav-link px-0 me-xl-4"
-                href="javascript:void(0)"
-              >
-                <i class="ti ti-menu-2 ti-md"></i>
-              </a>
+          <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
+            <div class="navbar-nav align-items-center">
+              <div class="nav-item dropdown-style-switcher dropdown">
+                <a class="nav-link btn btn-text-secondary btn-icon rounded-pill dropdown-toggle hide-arrow"
+                  href="javascript:void(0);" data-bs-toggle="dropdown">
+                  <i class="ti ti-md"></i>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-start dropdown-styles">
+                  <li>
+                    <a class="dropdown-item" href="javascript:void(0);" data-theme="light">
+                      <span class="align-middle"><i class="ti ti-sun me-3"></i>Light</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="javascript:void(0);" data-theme="dark">
+                      <span class="align-middle"><i class="ti ti-moon-stars me-3"></i>Dark</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="javascript:void(0);" data-theme="system">
+                      <span class="align-middle"><i class="ti ti-device-desktop-analytics me-3"></i>System</span>
+                    </a>
+                  </li>
+                </ul>
+              </div>
             </div>
 
-            <div
-              class="navbar-nav-right d-flex align-items-center"
-              id="navbar-collapse"
-            >
-              <div class="navbar-nav align-items-center">
-                <div class="nav-item dropdown-style-switcher dropdown">
-                  <a
-                    class="nav-link btn btn-text-secondary btn-icon rounded-pill dropdown-toggle hide-arrow"
-                    href="javascript:void(0);"
-                    data-bs-toggle="dropdown"
-                  >
-                    <i class="ti ti-md"></i>
-                  </a>
-                  <ul class="dropdown-menu dropdown-menu-start dropdown-styles">
-                    <li>
-                      <a
-                        class="dropdown-item"
-                        href="javascript:void(0);"
-                        data-theme="light"
-                      >
-                        <span class="align-middle"
-                          ><i class="ti ti-sun me-3"></i>Light</span
-                        >
+            <ul class="navbar-nav flex-row align-items-center ms-auto">
+              <!-- User -->
+              <li class="nav-item navbar-dropdown dropdown-user dropdown">
+                <a class="nav-link dropdown-toggle hide-arrow p-0" href="javascript:void(0);" data-bs-toggle="dropdown">
+                  <div class="avatar avatar-online">
+                    <img src="#" alt class="rounded-circle" />
+                  </div>
+                </a>
+                <ul class="dropdown-menu dropdown-menu-end">
+                  <li>
+                    <a class="dropdown-item mt-0" href="#">
+                      <div class="d-flex align-items-center">
+                        <div class="flex-shrink-0 me-2">
+                          <div class="avatar avatar-online">
+                            <img src="../../assets/img/avatars/1.png" alt class="rounded-circle" />
+                          </div>
+                        </div>
+                        <div class="flex-grow-1">
+                          <h6 class="mb-0">John Doe</h6>
+                          <small class="text-muted">Admin</small>
+                        </div>
+                      </div>
+                    </a>
+                  </li>
+                  <li>
+                    <div class="dropdown-divider my-1 mx-n2"></div>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="#">
+                      <i class="ti ti-user me-3 ti-md"></i><span class="align-middle">My Profile</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="#">
+                      <i class="ti ti-settings me-3 ti-md"></i><span class="align-middle">Settings</span>
+                    </a>
+                  </li>
+                  <li>
+                    <a class="dropdown-item" href="#">
+                      <span class="d-flex align-items-center align-middle">
+                        <i class="flex-shrink-0 ti ti-file-dollar me-3 ti-md"></i>
+                        <span class="flex-grow-1 align-middle">Billing</span>
+                        <span
+                          class="flex-shrink-0 badge bg-danger d-flex align-items-center justify-content-center">4</span>
+                      </span>
+                    </a>
+                  </li>
+                  <li>
+                    <div class="dropdown-divider my-1 mx-n2"></div>
+                  </li>
+                  <li>
+                    <div class="d-grid px-2 pt-2 pb-1">
+                      <a class="btn btn-sm btn-danger d-flex" href="javascript:void(0);">
+                        <small class="align-middle">Logout</small>
+                        <i class="ti ti-logout ms-2 ti-14px"></i>
                       </a>
-                    </li>
-                    <li>
-                      <a
-                        class="dropdown-item"
-                        href="javascript:void(0);"
-                        data-theme="dark"
-                      >
-                        <span class="align-middle"
-                          ><i class="ti ti-moon-stars me-3"></i>Dark</span
-                        >
-                      </a>
-                    </li>
-                    <li>
-                      <a
-                        class="dropdown-item"
-                        href="javascript:void(0);"
-                        data-theme="system"
-                      >
-                        <span class="align-middle"
-                          ><i class="ti ti-device-desktop-analytics me-3"></i
-                          >System</span
-                        >
-                      </a>
-                    </li>
-                  </ul>
+                    </div>
+                  </li>
+                </ul>
+              </li>
+              <!--/ User -->
+            </ul>
+          </div>
+        </nav>
+        <!-- / Navbar -->
+
+        <!-- Content wrapper -->
+        <div class="content-wrapper">
+          <!-- Content -->
+          <div data-bs-spy="scroll" class="scrollspy-example">
+            <!-- Hero: Start -->
+            <section id="landingHero" class="section-py landing-hero position-relative">
+              <img src="../../assets/img/front-pages/backgrounds/hero-bg.png" alt="hero background"
+                class="position-absolute top-0 start-50 translate-middle-x object-fit-cover w-100 h-100"
+                data-speed="1" />
+              <div class="container">
+                <div class="hero-text-box text-center position-relative">
+                  <h1 class="text-primary hero-title display-6 fw-extrabold">
+                    Ketahanan Pangan <br />
+                    Aceh Utara
+                  </h1>
+                  <h2 class="hero-sub-title h6 mb-6">
+                    Data 5 Tahun Terakhir: Lengkap, Interaktif, Informatif
+                  </h2>
+                  <div class="landing-hero-btn d-inline-block position-relative">
+                    <a href="#landingFeatures" class="btn btn-primary btn-lg">Lihat Data</a>
+                  </div>
                 </div>
               </div>
+            </section>
+            <!-- Hero: End -->
 
-              <ul class="navbar-nav flex-row align-items-center ms-auto">
-                <!-- User -->
-                <li class="nav-item navbar-dropdown dropdown-user dropdown">
-                  <a
-                    class="nav-link dropdown-toggle hide-arrow p-0"
-                    href="javascript:void(0);"
-                    data-bs-toggle="dropdown"
-                  >
-                    <div class="avatar avatar-online">
-                      <img src="#" alt class="rounded-circle" />
-                    </div>
-                  </a>
-                  <ul class="dropdown-menu dropdown-menu-end">
-                    <li>
-                      <a class="dropdown-item mt-0" href="#">
-                        <div class="d-flex align-items-center">
-                          <div class="flex-shrink-0 me-2">
-                            <div class="avatar avatar-online">
-                              <img
-                                src="../../assets/img/avatars/1.png"
-                                alt
-                                class="rounded-circle"
-                              />
+            <!-- Useful features: Start -->
+            <section id="landingFeatures" class="landing-features">
+              <div class="container-xxl flex-grow-1 container-p-y">
+                <!-- Row: Card Ringkas -->
+                <div class="row mb-4">
+                  <!-- Row: Card Ringkas + Chart -->
+                  <div class="row g-3 mb-4">
+                    <!-- Kiri: 4 Card Ringkas -->
+                    <div class="col-lg-6">
+                      <div class="row g-3">
+                        <!-- Card 1 -->
+                        <div class="col-md-6">
+                          <div class="card h-100">
+                            <div class="card-header">
+                              <h5 class="card-title mb-0">Total Luas Panen</h5>
+                            </div>
+                            <div class="salesChart" style="height: 80px"></div>
+                            <div class="card-body pt-0">
+                              <h4 class="mb-0">0</h4>
+                              <small class="text-muted">-</small>
                             </div>
                           </div>
-                          <div class="flex-grow-1">
-                            <h6 class="mb-0">John Doe</h6>
-                            <small class="text-muted">Admin</small>
+                        </div>
+                        <!-- Card 2 -->
+                        <div class="col-md-6">
+                          <div class="card h-100">
+                            <div class="card-header">
+                              <h5 class="card-title mb-0">Komoditas Utama</h5>
+                            </div>
+                            <div class="salesChart" style="height: 80px"></div>
+                            <div class="card-body pt-0">
+                              <h4 class="mb-0">0</h4>
+                              <small class="text-muted">-</small>
+                            </div>
                           </div>
                         </div>
-                      </a>
-                    </li>
-                    <li>
-                      <div class="dropdown-divider my-1 mx-n2"></div>
-                    </li>
-                    <li>
-                      <a class="dropdown-item" href="#">
-                        <i class="ti ti-user me-3 ti-md"></i
-                        ><span class="align-middle">My Profile</span>
-                      </a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item" href="#">
-                        <i class="ti ti-settings me-3 ti-md"></i
-                        ><span class="align-middle">Settings</span>
-                      </a>
-                    </li>
-                    <li>
-                      <a class="dropdown-item" href="#">
-                        <span class="d-flex align-items-center align-middle">
-                          <i
-                            class="flex-shrink-0 ti ti-file-dollar me-3 ti-md"
-                          ></i>
-                          <span class="flex-grow-1 align-middle">Billing</span>
-                          <span
-                            class="flex-shrink-0 badge bg-danger d-flex align-items-center justify-content-center"
-                            >4</span
-                          >
-                        </span>
-                      </a>
-                    </li>
-                    <li>
-                      <div class="dropdown-divider my-1 mx-n2"></div>
-                    </li>
-                    <li>
-                      <div class="d-grid px-2 pt-2 pb-1">
-                        <a
-                          class="btn btn-sm btn-danger d-flex"
-                          href="javascript:void(0);"
-                        >
-                          <small class="align-middle">Logout</small>
-                          <i class="ti ti-logout ms-2 ti-14px"></i>
-                        </a>
+                        <!-- Card 3 -->
+                        <div class="col-md-6">
+                          <div class="card h-100">
+                            <div class="card-header">
+                              <h5 class="card-title mb-0">Rata-Rata Harga Komoditas</h5>
+                            </div>
+                            <div class="salesChart" style="height: 80px"></div>
+                            <div class="card-body pt-0">
+                              <h4 class="mb-0">0</h4>
+                              <small class="text-muted">-</small>
+                            </div>
+                          </div>
+                        </div>
+                        <!-- Card 4 -->
+                        <div class="col-md-6">
+                          <div class="card h-100">
+                            <div class="card-header">
+                              <h5 class="card-title mb-0">Harga Tertinggi</h5>
+                            </div>
+                            <div class="salesChart" style="height: 80px"></div>
+                            <div class="card-body pt-0">
+                              <h4 class="mb-0">0</h4>
+                              <small class="text-muted">-</small>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </li>
-                  </ul>
-                </li>
-                <!--/ User -->
-              </ul>
-            </div>
-          </nav>
-          <!-- / Navbar -->
+                    </div>
 
-          <!-- Content wrapper -->
-          <div class="content-wrapper">
-            <!-- Content -->
+                    <!-- Kanan: Pie Chart -->
+                    <div class="col-lg-6">
+                      <!-- <h5 class="mb-3">Pie Chart Produksi</h5> -->
+                      <div id="pieChart" style="height:400px"></div>
+                    </div>
 
-            <div data-bs-spy="scroll" class="scrollspy-example">
-              <!-- Hero: Start -->
-              <section
-                id="landingHero"
-                class="section-py landing-hero position-relative"
-              >
-                <img
-                  src="../../assets/img/front-pages/backgrounds/hero-bg.png"
-                  alt="hero background"
-                  class="position-absolute top-0 start-50 translate-middle-x object-fit-cover w-100 h-100"
-                  data-speed="1"
-                />
-                <div class="container">
-                  <div class="hero-text-box text-center position-relative">
-                    <h1 class="text-primary hero-title display-6 fw-extrabold">
-                      Ketahanan Pangan <br />
-                      Aceh Utara
-                    </h1>
-                    <h2 class="hero-sub-title h6 mb-6">
-                      Data 5 Tahun Terakhir: Lengkap, Interaktif, Informatif
-                    </h2>
-                    <div
-                      class="landing-hero-btn d-inline-block position-relative"
-                    >
-                      <a href="#landingFeatures" class="btn btn-primary btn-lg"
-                        >Lihat Data</a
-                      >
+                    <!-- Row: Grafik + Peta -->
+                    <div class="row g-3 mb-4">
+                      <!-- Grafik Tren Produksi -->
+                      <div class="col-lg-6 col-md-12">
+                        <div class="card h-100">
+                          <div class="card-header d-flex align-items-center justify-content-between">
+                            <h5 class="card-title m-0">Grafik Tren Produksi</h5>
+                            <div class="dropdown">
+                              <button class="btn btn-outline-secondary border-0 p-2" data-bs-toggle="dropdown">
+                                <i class="ti ti-filter ti-md text-muted"></i>
+                                <!-- ganti icon jadi filter -->
+                              </button>
+                              <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                  <a class="dropdown-item filter-option" data-filter="2022" href="#">Tahun 2025</a>
+                                </li>
+                                <li>
+                                  <a class="dropdown-item filter-option" data-filter="2023" href="#">Tahun 2024</a>
+                                </li>
+                                <li>
+                                  <a class="dropdown-item filter-option" data-filter="2024" href="#">Tahun 2023</a>
+                                </li>
+                                <li>
+                                  <hr class="dropdown-divider" />
+                                </li>
+                                <li>
+                                  <a class="dropdown-item filter-option" data-filter="all" href="#">Semua Tahun</a>
+                                </li>
+                              </ul>
+                            </div>
+                          </div>
+                          <div class="card-body">
+                            <div id="horizontalBarChart" style="height: 400px"></div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <!-- Peta Interaktif -->
+                      <div class="col-lg-6 col-md-12">
+                        <div class="card h-100">
+                          <div class="card-header">
+                            <h5 class="card-title mb-0">
+                              Peta Interaktif Aceh Utara
+                            </h5>
+                          </div>
+                          <div class="card-body">
+                            <div id="map" style="height: 400px"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Row: Tabel -->
+                    <div class="card col-12">
+                      <div class="card-body">
+                        <!-- 🔎 Filter + Search sejajar -->
+                        <div class="row mb-3 align-items-end">
+                          <div class="col-md-3">
+                            <label for="filterKecamatan" class="form-label">Kecamatan</label>
+                            <select id="filterKecamatan" class="form-select">
+                              <option value="">Semua</option>
+                              <option value="Lhoksukon">Lhoksukon</option>
+                              <option value="Tanah Luas">Tanah Luas</option>
+                              <option value="Sawang">Sawang</option>
+                            </select>
+                          </div>
+                          <div class="col-md-3">
+                            <label for="filterPangan" class="form-label">Jenis Pangan</label>
+                            <select id="filterPangan" class="form-select">
+                              <option value="">Semua</option>
+                              <option value="Padi">Padi</option>
+                              <option value="Jagung">Jagung</option>
+                              <option value="Kedelai">Kedelai</option>
+                            </select>
+                          </div>
+                          <div class="col-md-2">
+                            <label for="filterTahun" class="form-label">Tahun</label>
+                            <select id="filterTahun" class="form-select">
+                              <option value="">Semua</option>
+                              <option value="2022">2022</option>
+                              <option value="2023">2023</option>
+                              <option value="2024">2024</option>
+                            </select>
+                          </div>
+                        </div>
+
+                        <!-- 🔹 Tabel -->
+                        <div class="card-datatable table-responsive">
+                          <table id="myTable" class="table table-sm table-striped align-middle">
+                            <thead class="table-light">
+                              <tr>
+                                <th>No.</th>
+                                <th>Kecamatan</th>
+                                <th>Jenis Pangan</th>
+                                <th>Tahun</th>
+                                <th>Produksi</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              <!-- isi tabel dari JSON -->
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
                     </div>
                   </div>
+            </section>
+
+            <!-- Useful features: End -->
+          </div>
+          <!-- / Content -->
+
+          <!-- Footer -->
+          <footer class="content-footer footer bg-footer-theme">
+            <div class="container-xxl">
+              <div
+                class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column">
+                <div class="text-body">
+                  ©
+                  <script>
+                    document.write(new Date().getFullYear());
+                  </script>
+                  , made with ❤️ by
+                  <a href="https://pixinvent.com" target="_blank" class="footer-link">Pixinvent</a>
                 </div>
-              </section>
-              <!-- Hero: End -->
-
-              <!-- Useful features: Start -->
-              <section id="landingFeatures" class="landing-features">
-                <div class="container-xxl flex-grow-1 container-p-y">
-                  <!-- Row: 3 Card Ringkas -->
-                  <div class="row g-3 mb-4">
-                    <div class="col-lg-4 col-md-6 col-12">
-                      <div class="card h-100">
-                        <div class="card-header pb-0">
-                          <h5 class="card-title mb-1">Total Panen</h5>
-                          <p class="card-subtitle">Luas panen keseluruhan</p>
-                        </div>
-                        <div class="salesChart" style="height: 150px"></div>
-                        <div class="card-body pt-0">
-                          <div
-                            class="d-flex justify-content-between align-items-center mt-3"
-                          >
-                            <h4 class="mb-0">175k</h4>
-                            <small class="text-danger">-16.2%</small>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="col-lg-4 col-md-6 col-12">
-                      <div class="card h-100">
-                        <div class="card-header pb-0">
-                          <h5 class="card-title mb-1">Komoditas Terbanyak</h5>
-                          <p class="card-subtitle">Pangan dominan</p>
-                        </div>
-                        <div class="salesChart" style="height: 150px"></div>
-                        <div class="card-body pt-0">
-                          <div
-                            class="d-flex justify-content-between align-items-center mt-3"
-                          >
-                            <h4 class="mb-0">Padi</h4>
-                            <small class="text-success">+8.4%</small>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div class="col-lg-4 col-md-6 col-12">
-                      <div class="card h-100">
-                        <div class="card-header pb-0">
-                          <h5 class="card-title mb-1">Tahun Terbaik</h5>
-                          <p class="card-subtitle">Produksi tertinggi</p>
-                        </div>
-                        <div class="salesChart" style="height: 150px"></div>
-                        <div class="card-body pt-0">
-                          <div
-                            class="d-flex justify-content-between align-items-center mt-3"
-                          >
-                            <h4 class="mb-0">2020</h4>
-                            <small class="text-primary">+12.7%</small>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Row: Grafik + Peta -->
-                  <div class="row g-3 mb-4">
-                    <!-- Grafik Tren Produksi -->
-                    <div class="col-lg-6 col-md-12">
-                      <div class="card h-100">
-                        <div
-                          class="card-header d-flex align-items-center justify-content-between"
-                        >
-                          <h5 class="card-title m-0">Grafik Tren Produksi</h5>
-                          <div class="dropdown">
-                            <button
-                              class="btn btn-outline-secondary border-0 p-2"
-                              data-bs-toggle="dropdown"
-                            >
-                              <i class="ti ti-filter ti-md text-muted"></i>
-                              <!-- ganti icon jadi filter -->
-                            </button>
-                            <ul class="dropdown-menu dropdown-menu-end">
-                              <li>
-                                <a
-                                  class="dropdown-item filter-option"
-                                  data-filter="2022"
-                                  href="#"
-                                  >Tahun 2025</a
-                                >
-                              </li>
-                              <li>
-                                <a
-                                  class="dropdown-item filter-option"
-                                  data-filter="2023"
-                                  href="#"
-                                  >Tahun 2024</a
-                                >
-                              </li>
-                              <li>
-                                <a
-                                  class="dropdown-item filter-option"
-                                  data-filter="2024"
-                                  href="#"
-                                  >Tahun 2023</a
-                                >
-                              </li>
-                              <li><hr class="dropdown-divider" /></li>
-                              <li>
-                                <a
-                                  class="dropdown-item filter-option"
-                                  data-filter="all"
-                                  href="#"
-                                  >Semua Tahun</a
-                                >
-                              </li>
-                            </ul>
-                          </div>
-                        </div>
-                        <div class="card-body">
-                          <div
-                            id="horizontalBarChart"
-                            style="height: 400px"
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Peta Interaktif -->
-                    <div class="col-lg-6 col-md-12">
-                      <div class="card h-100">
-                        <div class="card-header">
-                          <h5 class="card-title mb-0">
-                            Peta Interaktif Aceh Utara
-                          </h5>
-                        </div>
-                        <div class="card-body">
-                          <div id="map" style="height: 400px"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <!-- Row: Tabel -->
-                  <div class="card col-12">
-                    <div class="card-body">
-                      <!-- 🔎 Filter + Search sejajar -->
-                      <div class="row mb-3 align-items-end">
-                        <div class="col-md-3">
-                          <label for="filterKecamatan" class="form-label"
-                            >Kecamatan</label
-                          >
-                          <select id="filterKecamatan" class="form-select">
-                            <option value="">Semua</option>
-                            <option value="Lhoksukon">Lhoksukon</option>
-                            <option value="Tanah Luas">Tanah Luas</option>
-                            <option value="Sawang">Sawang</option>
-                          </select>
-                        </div>
-                        <div class="col-md-3">
-                          <label for="filterPangan" class="form-label"
-                            >Jenis Pangan</label
-                          >
-                          <select id="filterPangan" class="form-select">
-                            <option value="">Semua</option>
-                            <option value="Padi">Padi</option>
-                            <option value="Jagung">Jagung</option>
-                            <option value="Kedelai">Kedelai</option>
-                          </select>
-                        </div>
-                        <div class="col-md-2">
-                          <label for="filterTahun" class="form-label"
-                            >Tahun</label
-                          >
-                          <select id="filterTahun" class="form-select">
-                            <option value="">Semua</option>
-                            <option value="2022">2022</option>
-                            <option value="2023">2023</option>
-                            <option value="2024">2024</option>
-                          </select>
-                        </div>
-
-                        <!-- Search Box custom -->
-                        <div class="col-md-4 text-end">
-                          <label for="searchInput" class="form-label"
-                            >Search</label
-                          >
-                          <input
-                            type="text"
-                            id="searchInput"
-                            class="form-control"
-                            placeholder="Cari data..."
-                          />
-                        </div>
-                      </div>
-
-                      <!-- 🔹 Tabel -->
-                      <div class="card-datatable table-responsive">
-                        <table
-                          id="myTable"
-                          class="table table-sm table-striped align-middle"
-                        >
-                          <thead class="table-light">
-                            <tr>
-                              <th>No.</th>
-                              <th>Kecamatan</th>
-                              <th>Jenis Pangan</th>
-                              <th>Tahun</th>
-                              <th>Produksi</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            <!-- isi tabel dari JSON -->
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </section>
-
-              <!-- Useful features: End -->
-            </div>
-            <!-- / Content -->
-
-            <!-- Footer -->
-            <footer class="content-footer footer bg-footer-theme">
-              <div class="container-xxl">
-                <div
-                  class="footer-container d-flex align-items-center justify-content-between py-4 flex-md-row flex-column"
-                >
-                  <div class="text-body">
-                    ©
-                    <script>
-                      document.write(new Date().getFullYear());
-                    </script>
-                    , made with ❤️ by
-                    <a
-                      href="https://pixinvent.com"
-                      target="_blank"
-                      class="footer-link"
-                      >Pixinvent</a
-                    >
-                  </div>
-                  <div class="d-none d-lg-inline-block">
-                    <a
-                      href="https://demos.pixinvent.com/vuexy-html-admin-template/documentation/"
-                      target="_blank"
-                      class="footer-link me-4"
-                      >Documentation</a
-                    >
-                  </div>
+                <div class="d-none d-lg-inline-block">
+                  <a href="https://demos.pixinvent.com/vuexy-html-admin-template/documentation/" target="_blank"
+                    class="footer-link me-4">Documentation</a>
                 </div>
               </div>
-            </footer>
-            <!-- / Footer -->
+            </div>
+          </footer>
+          <!-- / Footer -->
 
-            <div class="content-backdrop fade"></div>
-          </div>
-          <!-- Content wrapper -->
+          <div class="content-backdrop fade"></div>
         </div>
-        <!-- / Layout page -->
+        <!-- Content wrapper -->
       </div>
-
-      <!-- Overlay -->
-      <div class="layout-overlay layout-menu-toggle"></div>
-
-      <!-- Drag Target Area To SlideIn Menu On Small Screens -->
-      <div class="drag-target"></div>
+      <!-- / Layout page -->
     </div>
-    <!-- / Layout wrapper -->
 
-    <!-- Core JS -->
-    <!-- build:js assets/vendor/js/core.js -->
+    <!-- Overlay -->
+    <div class="layout-overlay layout-menu-toggle"></div>
 
-    <!-- jQuery & DataTables dari CDN -->
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="//cdn.datatables.net/2.3.3/js/dataTables.min.js"></script>
+    <!-- Drag Target Area To SlideIn Menu On Small Screens -->
+    <div class="drag-target"></div>
+  </div>
+  <!-- / Layout wrapper -->
 
-    <script>
-      var table = $("#myTable").DataTable({
-        lengthChange: false,
-        dom: "lrtip", // hilangkan search bawaan DataTables
-      });
+  <!-- Core JS -->
+  <!-- build:js assets/vendor/js/core.js -->
 
-      // 🔎 Custom search sync
-      $("#searchInput").on("keyup", function () {
-        table.search(this.value).draw();
-      });
-    </script>
+  <!-- jQuery & DataTables dari CDN -->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="//cdn.datatables.net/2.3.3/js/dataTables.min.js"></script>
 
-    <!-- Bootstrap Bundle (sudah ada Popper di dalamnya) -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    var table = $("#myTable").DataTable({
+      lengthChange: false,
+      dom: "lrtip", // hilangkan search bawaan DataTables
+    });
 
-    <script src="../../assets/vendor/libs/node-waves/node-waves.js"></script>
-    <script src="../../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
-    <script src="../../assets/vendor/libs/hammer/hammer.js"></script>
+    // 🔎 Custom search sync
+    $("#searchInput").on("keyup", function () {
+      table.search(this.value).draw();
+    });
+  </script>
 
-    <script src="../../assets/vendor/js/menu.js"></script>
-    <script src="../../assets/js/dashboards-analytics.js"></script>
+  <!-- Bootstrap Bundle (sudah ada Popper di dalamnya) -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-    <!-- endbuild -->
+  <script src="../../assets/vendor/libs/node-waves/node-waves.js"></script>
+  <script src="../../assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js"></script>
+  <script src="../../assets/vendor/libs/hammer/hammer.js"></script>
 
-    <!-- Vendors JS -->
+  <script src="../../assets/vendor/js/menu.js"></script>
+  <script src="../../assets/js/dashboards-analytics.js"></script>
 
-    <!-- Main JS -->
-    <script src="../../assets/js/main.js"></script>
+  <!-- endbuild -->
 
-    <script src="assets/vendor/libs/apex-charts/apexcharts.js"></script>
-    <script src="assets/js/dashboards-crm.js"></script>
-    <script src="assets/js/cards-analytics.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsvectormap"></script>
-    <script src="kecamatanMap.js"></script>
-    <script>
-      const map = new jsVectorMap({
-        selector: "#map",
-        map: "aceh-utara",
+  <!-- Vendors JS -->
 
-        // Fitur interaksi
-        regionsSelectable: true,
-        regionStyle: {
-          initial: {
-            fill: "#cfd8dc",
-            stroke: "#37474f",
-            "stroke-width": 1,
-            "stroke-linejoin": "round",
-          },
-          hover: {
-            fill: "#ff7043",
-          },
-          selected: {
-            fill: "#0277bd",
-          },
+  <!-- Main JS -->
+  <script src="../../assets/js/main.js"></script>
+
+  <script src="assets/vendor/libs/apex-charts/apexcharts.js"></script>
+  <script src="assets/js/dashboards-crm.js"></script>
+  <script src="assets/js/cards-analytics.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jsvectormap"></script>
+  <script src="kecamatanMap.js"></script>
+  <script>
+    const map = new jsVectorMap({
+      selector: "#map",
+      map: "aceh-utara",
+
+      // Fitur interaksi
+      regionsSelectable: true,
+      regionStyle: {
+        initial: {
+          fill: "#cfd8dc",
+          stroke: "#37474f",
+          "stroke-width": 1,
+          "stroke-linejoin": "round",
         },
-        // labels: {
-        //   regions: {
-        //     render(code) {
-        //       return code; // atau return nama manual
-        //     },
-        //   },
-        // },
-
-        onRegionClick: function (event, code) {
-          event.preventDefault(); // kalau mau cegah zoom default
-          const name = map.getRegionName(code);
-          alert("Kamu klik: " + name + " (Kode: " + code + ")");
-
-          // Misal mau redirect ke halaman detail
-          window.location.href = "/detail-kecamatan/" + code;
+        hover: {
+          fill: "#ff7043",
         },
-        zoomButtons: true,
-      });
-    </script>
-  </body>
+        selected: {
+          fill: "#0277bd",
+        },
+      },
+      // labels: {
+      //   regions: {
+      //     render(code) {
+      //       return code; // atau return nama manual
+      //     },
+      //   },
+      // },
+
+      onRegionClick: function (event, code) {
+        event.preventDefault(); // kalau mau cegah zoom default
+        const name = map.getRegionName(code);
+        alert("Kamu klik: " + name + " (Kode: " + code + ")");
+
+        // Misal mau redirect ke halaman detail
+        window.location.href = "/detail-kecamatan/" + code;
+      },
+      zoomButtons: true,
+    });
+  </script>
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      var options = {
+        chart: {
+          type: 'pie',
+          height: 400
+        },
+        labels: ['Padi', 'Jagung', 'Kedelai', 'Kopi', 'Lainnya'],
+        series: [44, 33, 12, 9, 25],
+        responsive: [{
+          breakpoint: 480,
+          options: {
+            chart: { width: 300 },
+            legend: { position: 'bottom' }
+          }
+        }]
+      };
+
+      var chart = new ApexCharts(document.querySelector("#pieChart"), options);
+      chart.render();
+    });
+  </script>
+</body>
+
 </html>

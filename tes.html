@@ -1,0 +1,240 @@
+<cms:pre:render>CMS_Include('header.html')</cms:pre:render>
+
+<main role="main">
+    <div class="container mt-2 mt-md-0">
+        <div class="row">
+            <!-- Konten utama -->
+            <div class="col-md-12 content-area">
+                <div class="single-berita">
+                    <div class="card" style="width: 100%; display: none;">
+                        <div class="card-header">
+                            <div class="gambar-caption"></div>
+                            <h1 class="card-title judul-berita">Title</h1>
+                        </div>
+                        <div class="card-body isi-berita"></div>
+                        <div class="meta-tags" style="font-size: 10pt;">
+                            <span class="font-weight-600"><i class="fas fa-tags"></i></span>
+                            <span class="tags tags-berita"></span>
+                        </div>
+                        <div id="komentar"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<cms:pre:render>CMS_Include('footer.html')</cms:pre:render>
+
+<style>
+    /* Biar row kiri & kanan sama tinggi */
+    .row-equal {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
+    }
+
+    .row-equal>[class*='col-'] {
+        display: flex;
+        flex-direction: column;
+    }
+
+    /* Biar pie chart ikut penuh tinggi card */
+    #pieChart {
+        width: 100%;
+        height: 100% !important;
+    }
+</style>
+
+<script type="text/javascript">
+    CMS.Loaded(async function () {
+        setIcon(CMS_Setting('icon'));
+
+        function sosmed(judul) {
+            const url = window.location.href;
+            return `
+        <a href="//www.facebook.com/share.php?u=${url}" target="_blank">
+            <img src="/themes/_ceudah-copy/assets/images/facebook.png" width="24" height="24" />
+        </a>
+        <a href="//twitter.com/intent/tweet?url=${url}&text=${judul}" target="_blank">
+            <img src="/themes/_ceudah-copy/assets/images/twitter.png" width="24" height="24" />
+        </a>
+        <a href="whatsapp://send?text=${judul} ${url}" target="_blank">
+            <img src="/themes/_ceudah-copy/assets/images/whatsapp.png" width="24" height="24" />
+        </a>`;
+        }
+
+        // Fetch data JSON
+        const jsonPath = '/json' + cleanSlash(window.location.pathname) + '.json?mode=origin';
+        try {
+            const res = await fetch(jsonPath);
+            if (!res.ok) throw new Error(res.statusText);
+            const json = await res.json();
+
+            $(".share-link").append(sosmed(json.judul));
+
+            if (segments(1) === 'halaman' && segments(2) === 'chart-panen') {
+                setTitle("Dashboard " + json.judul);
+
+                // Render dashboard HTML
+                $(".judul-berita").html(json.judul);
+                $(".isi-berita").html(`
+<div class="row row-equal">
+    <!-- Kiri: Card ringkas -->
+    <div class="col-lg-6">
+        <div class="row g-3 h-100">
+            <div class="col-md-6 d-flex">
+                <div class="card shadow-sm text-center flex-fill">
+                    <div class="card-header font-weight-bold">Total Luas Panen</div>
+                    <div class="card-body">
+                        <h4 class="mb-0">0</h4>
+                        <small class="text-muted">Ha</small>
+                        <div id="chartLuas" class="chart-mini"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 d-flex">
+                <div class="card shadow-sm text-center flex-fill">
+                    <div class="card-header font-weight-bold">Komoditas Utama</div>
+                    <div class="card-body">
+                        <h4 class="mb-0">-</h4>
+                        <small class="text-muted">Jenis</small>
+                        <div id="chartKomoditas" class="chart-mini"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 d-flex">
+                <div class="card shadow-sm text-center flex-fill">
+                    <div class="card-header font-weight-bold">Rata-Rata Harga</div>
+                    <div class="card-body">
+                        <h4 class="mb-0">0</h4>
+                        <small class="text-muted">Rp/Kg</small>
+                        <div id="chartHargaRata" class="chart-mini"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 d-flex">
+                <div class="card shadow-sm text-center flex-fill">
+                    <div class="card-header font-weight-bold">Harga Tertinggi</div>
+                    <div class="card-body">
+                        <h4 class="mb-0">0</h4>
+                        <small class="text-muted">Rp/Kg</small>
+                        <div id="chartHargaTinggi" class="chart-mini"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Kanan: Pie Chart -->
+    <div class="col-lg-6 d-flex">
+        <div class="card shadow-sm flex-fill">
+            <div class="card-header text-center font-weight-bold">Chart Panen</div>
+            <div class="card-body d-flex justify-content-center align-items-center">
+                <div id="pieChart"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Bawah -->
+<div class="row mt-3">
+    <!-- Bar Chart -->
+    <div class="col-lg-6 d-flex">
+        <div class="card shadow-sm flex-fill">
+            <div class="card-header text-center font-weight-bold">Produksi Tahunan</div>
+            <div class="card-body">
+                <div id="horizontalBarChart" style="height:400px;"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Map -->
+    <div class="col-lg-6 d-flex">
+        <div class="card shadow-sm flex-fill">
+            <div class="card-header text-center font-weight-bold">Peta Wilayah</div>
+            <div class="card-body">
+                <div id="mapContainer" style="height:400px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tambahan: Tabel -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card shadow-sm">
+            <div class="card-header text-center font-weight-bold">Data Panen Per Kecamatan</div>
+            <div class="card-body table-responsive">
+                <table class="table table-striped table-bordered mb-0" id="tabelPanen">
+                    <thead class="table-light">
+                        <tr>
+                            <th>No</th>
+                            <th>Kecamatan</th>
+                            <th>Komoditas</th>
+                            <th>Luas (Ha)</th>
+                            <th>Produksi (Ton)</th>
+                            <th>Harga (Rp/Kg)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Data diisi lewat JS -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+`);
+
+                $(".card").fadeIn();
+
+                // ================= Load Script Secara Aman =================
+                const loadScript = src => new Promise(res => {
+                    const s = document.createElement("script");
+                    s.src = src;
+                    s.onload = res;
+                    document.body.appendChild(s);
+                });
+
+                // Urutan load: ApexCharts → chart-dashboard → jsVectorMap → peta Aceh Utara → map-dashboard
+                await loadScript("https://cdn.jsdelivr.net/npm/apexcharts");
+                await loadScript("/themes/_ceudah-copy/assets/js/chart-dashboard.js?v=" + Date.now());
+                await loadScript("https://cdn.jsdelivr.net/npm/jsvectormap");
+                await loadScript("/themes/_ceudah-copy/assets/js/kecamatanmap.js?v=" + Date.now());
+                await loadScript("/themes/_ceudah-copy/assets/js/map-dashboard.js?v=" + Date.now());
+                
+                // Panggil fungsi
+                renderCharts();
+                renderMap();
+
+                // Dummy data jika json.dataKecamatan belum ada
+                const dummyData = [
+                    { kecamatan: "Lhoksukon", komoditas: "Padi", luas: 1200, produksi: 3500, harga: "5,200" },
+                    { kecamatan: "Samudera", komoditas: "Jagung", luas: 800, produksi: 2100, harga: "4,800" },
+                    { kecamatan: "Seunuddon", komoditas: "Kedelai", luas: 600, produksi: 1500, harga: "6,000" },
+                    { kecamatan: "Tanah Jambo Aye", komoditas: "Padi", luas: 1000, produksi: 3000, harga: "5,100" },
+                    { kecamatan: "Langkahan", komoditas: "Cabai", luas: 400, produksi: 900, harga: "20,000" }
+                ];
+
+                // Jika JSON tidak punya dataKecamatan → gunakan dummy
+                if (json.dataKecamatan && json.dataKecamatan.length > 0) {
+                    renderTable(json.dataKecamatan);
+                } else {
+                    renderTable(dummyData);
+                }
+
+
+
+            } else {
+                // Halaman biasa
+                $(".judul-berita").html(json.judul);
+                $(".isi-berita").html(json.konten);
+                $(".card").fadeIn();
+            }
+        } catch (err) {
+            console.error(err);
+            $(".daftar-berita").html(Page404());
+        }
+    });
+</script>
