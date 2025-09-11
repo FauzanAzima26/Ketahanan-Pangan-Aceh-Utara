@@ -79,110 +79,120 @@
                 // Render dashboard HTML
                 $(".judul-berita").html(json.judul);
                 $(".isi-berita").html(`
-<div class="row row-equal">
-    <!-- Kiri: Card ringkas -->
-    <div class="col-lg-6">
-        <div class="row g-3 h-100">
-            <div class="col-md-6 d-flex">
-                <div class="card shadow-sm text-center flex-fill">
-                    <div class="card-header font-weight-bold">Total Luas Panen</div>
-                    <div class="card-body">
-                        <h4 class="mb-0">0</h4>
-                        <small class="text-muted">Ha</small>
-                        <div id="chartLuas" class="chart-mini"></div>
-                    </div>
-                </div>
+<!-- 🔍 FILTER -->
+<div class="card shadow-sm mb-3">
+    <div class="card-header font-weight-bold">🔍 FILTER</div>
+    <div class="card-body">
+        <div class="row g-2">
+            <div class="col-md-4">
+                <select class="form-select" id="filterKecamatan">
+                    <option selected>-- Pilih Kecamatan --</option>
+                </select>
             </div>
-            <div class="col-md-6 d-flex">
-                <div class="card shadow-sm text-center flex-fill">
-                    <div class="card-header font-weight-bold">Komoditas Utama</div>
-                    <div class="card-body">
-                        <h4 class="mb-0">-</h4>
-                        <small class="text-muted">Jenis</small>
-                        <div id="chartKomoditas" class="chart-mini"></div>
-                    </div>
-                </div>
+            <div class="col-md-4">
+                <select class="form-select" id="filterKomoditas">
+                    <option selected>-- Pilih Komoditas --</option>
+                </select>
             </div>
-            <div class="col-md-6 d-flex">
-                <div class="card shadow-sm text-center flex-fill">
-                    <div class="card-header font-weight-bold">Rata-Rata Harga</div>
-                    <div class="card-body">
-                        <h4 class="mb-0">0</h4>
-                        <small class="text-muted">Rp/Kg</small>
-                        <div id="chartHargaRata" class="chart-mini"></div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6 d-flex">
-                <div class="card shadow-sm text-center flex-fill">
-                    <div class="card-header font-weight-bold">Harga Tertinggi</div>
-                    <div class="card-body">
-                        <h4 class="mb-0">0</h4>
-                        <small class="text-muted">Rp/Kg</small>
-                        <div id="chartHargaTinggi" class="chart-mini"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Kanan: Pie Chart -->
-    <div class="col-lg-6 d-flex">
-        <div class="card shadow-sm flex-fill">
-            <div class="card-header text-center font-weight-bold">Chart Panen</div>
-            <div class="card-body d-flex justify-content-center align-items-center">
-                <div id="pieChart"></div>
+            <div class="col-md-4">
+                <button class="btn btn-secondary w-100" id="resetFilter">⟳ Reset</button>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Bawah -->
-<div class="row mt-3">
-    <!-- Bar Chart -->
+<!-- 📌 RINGKASAN -->
+<div class="card shadow-sm mb-3">
+    <div class="card-header font-weight-bold">📌 RINGKASAN</div>
+    <div class="card-body">
+        <div class="row text-center">
+            <div class="col-md-3">
+                <h5 id="totalLuas">25.300</h5><small>Ha</small><br><span>Total Luas Panen</span>
+            </div>
+            <div class="col-md-3">
+                <h5 id="hargaRata">6.800</h5><small>Rp/kg</small><br><span>Harga Rata-rata</span>
+            </div>
+            <div class="col-md-3">
+                <h5 id="kecTerluas">Kec. A</h5><br><span>Kecamatan Terluas</span>
+            </div>
+            <div class="col-md-3">
+                <h5 id="komTerluas">Padi</h5><br><span>Komoditas Terluas</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 🗺️ PETA & GRAFIK (Row 1) -->
+<div class="row mb-3">
     <div class="col-lg-6 d-flex">
         <div class="card shadow-sm flex-fill">
-            <div class="card-header text-center font-weight-bold">Produksi Tahunan</div>
+            <div class="card-header text-center font-weight-bold">📊 Bar Chart : Luas Panen</div>
             <div class="card-body">
                 <div id="horizontalBarChart" style="height:400px;"></div>
             </div>
         </div>
     </div>
-
-    <!-- Map -->
     <div class="col-lg-6 d-flex">
         <div class="card shadow-sm flex-fill">
-            <div class="card-header text-center font-weight-bold">Peta Wilayah</div>
+            <div class="card-header text-center font-weight-bold">🗺️ Peta Kabupaten</div>
             <div class="card-body">
                 <div id="mapContainer" style="height:400px;"></div>
+                <small>- Hijau muda = luas kecil<br>- Hijau tua = luas besar</small>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Tambahan: Tabel -->
-<div class="row mt-3">
-    <div class="col-12">
-        <div class="card shadow-sm">
-            <div class="card-header text-center font-weight-bold">Data Panen Per Kecamatan</div>
-            <div class="card-body table-responsive">
-                <table class="table table-striped table-bordered mb-0" id="tabelPanen">
-                    <thead class="table-light">
-                        <tr>
-                            <th>No</th>
-                            <th>Kecamatan</th>
-                            <th>Komoditas</th>
-                            <th>Luas (Ha)</th>
-                            <th>Produksi (Ton)</th>
-                            <th>Harga (Rp/Kg)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <!-- Data diisi lewat JS -->
-                    </tbody>
-                </table>
+<!-- 📊 PIE & LINE CHART (Row 2) -->
+<div class="row mb-3">
+    <div class="col-lg-6 d-flex">
+        <div class="card shadow-sm flex-fill">
+            <div class="card-header text-center font-weight-bold">📊 Pie Chart : Distribusi Komoditas</div>
+            <div class="card-body d-flex justify-content-center align-items-center">
+                <div id="pieChart" style="height:400px;"></div>
             </div>
         </div>
+    </div>
+    <div class="col-lg-6 d-flex">
+        <div class="card shadow-sm flex-fill">
+            <div class="card-header text-center font-weight-bold">📈 Line Chart : Tren Harga Komoditas</div>
+            <div class="card-body">
+                <div id="lineChart" style="height:400px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 📋 DATA DETAIL -->
+<div class="card shadow-sm mb-3">
+    <div class="card-header text-center font-weight-bold">📋 Data Panen Per Kecamatan</div>
+    <div class="card-body table-responsive">
+        <table class="table table-striped table-bordered mb-0" id="tabelPanen">
+            <thead class="table-light">
+                <tr>
+                    <th>No</th>
+                    <th>Kecamatan</th>
+                    <th>Komoditas</th>
+                    <th>Luas (Ha)</th>
+                    <th>Produksi (Ton)</th>
+                    <th>Harga (Rp/Kg)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Data diisi lewat JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- 📂 FITUR TAMBAHAN -->
+<div class="card shadow-sm mb-3">
+    <div class="card-header font-weight-bold">📂 Fitur Tambahan</div>
+    <div class="card-body">
+        <button class="btn btn-success btn-sm">Export ke Excel</button>
+        <button class="btn btn-danger btn-sm">Export ke PDF</button>
+        <button class="btn btn-primary btn-sm">Cetak Grafik</button>
+        <p class="mt-2 mb-0 text-muted"><small>Tooltip interaktif saat hover grafik</small></p>
     </div>
 </div>
 `);
