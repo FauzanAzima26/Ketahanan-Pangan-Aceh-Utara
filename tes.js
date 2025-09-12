@@ -1,53 +1,60 @@
 function renderCharts() {
-  // === PIE CHART ===
-  var pieEl = document.querySelector("#pieChart");
+  // === PIE CHART: Distribusi Komoditas ===
+  const pieEl = document.querySelector("#pieChart");
   if (pieEl) {
-    var pieOptions = {
-      chart: { type: "pie", height: 400 },
-      labels: ["Padi", "Jagung", "Kedelai", "Kopi", "Lainnya"],
-      series: [44, 33, 12, 9, 25],
+    const pieOptions = {
+      chart: { type: "donut", height: 400 },
+      labels: ["Padi", "Jagung", "Kedelai", "Kopi", "Cabai"],
+      series: [45, 30, 15, 7, 3], // contoh data %
+      legend: { position: "bottom" },
+      dataLabels: { formatter: (val) => val.toFixed(1) + "%" },
       responsive: [{
-        breakpoint: 480,
-        options: {
-          chart: { width: 300 },
-          legend: { position: "bottom" }
-        }
+        breakpoint: 768,
+        options: { chart: { height: 300 } }
       }]
     };
     new ApexCharts(pieEl, pieOptions).render();
   }
 
-  // === HORIZONTAL BAR CHART ===
-  var barEl = document.querySelector("#horizontalBarChart");
+  // === BAR CHART: Luas Panen per Kecamatan ===
+  const barEl = document.querySelector("#horizontalBarChart");
   if (barEl) {
-    var barOptions = {
+    const barOptions = {
       chart: { type: "bar", height: 400 },
-      series: [{ name: "Produksi (ton)", data: [120, 150, 180, 160, 200] }],
-      xaxis: { categories: ["2021", "2022", "2023", "2024", "2025"] },
-      plotOptions: { bar: { horizontal: true } }
+      series: [{
+        name: "Luas Panen (Ha)",
+        data: [1200, 1500, 800, 600, 1000] // contoh data
+      }],
+      xaxis: {
+        categories: ["Kec. A", "Kec. B", "Kec. C", "Kec. D", "Kec. E"],
+        labels: { style: { fontSize: "12px" } }
+      },
+      plotOptions: { bar: { horizontal: true, borderRadius: 4 } },
+      colors: ["#2E7D32"]
     };
     new ApexCharts(barEl, barOptions).render();
   }
 
-  // === LINE CHART ===
-  var lineEl = document.querySelector("#lineChart");
+  // === LINE CHART: Tren Harga per Tahun ===
+  const lineEl = document.querySelector("#lineChart");
   if (lineEl) {
-    var lineOptions = {
-      chart: { type: "line", height: 400 },
+    const lineOptions = {
+      chart: { type: "line", height: 400, toolbar: { show: false } },
       series: [
-        { name: "Padi", data: [5000, 5200, 5100, 5300, 5400] },
-        { name: "Jagung", data: [4000, 4200, 4100, 4500, 4600] },
-        { name: "Kedelai", data: [6000, 5800, 5900, 6100, 6200] }
+        { name: "Padi", data: [6200, 6400, 6500, 6700, 6800, 7000] },
+        { name: "Jagung", data: [4800, 5000, 5200, 5300, 5400, 5600] },
+        { name: "Kedelai", data: [9000, 8800, 9100, 9300, 9400, 9500] }
       ],
-      xaxis: { categories: ["2021", "2022", "2023", "2024", "2025"] },
+      xaxis: { categories: ["2020", "2021", "2022", "2023", "2024", "2025"] },
       stroke: { curve: "smooth", width: 2 },
-      markers: { size: 4 }
+      markers: { size: 4 },
+      colors: ["#1E88E5", "#FB8C00", "#8E24AA"]
     };
     new ApexCharts(lineEl, lineOptions).render();
   }
 
-  // === MINI SPARKLINE CHARTS (opsional, kalau ada di card) ===
-  let optionsMini = (data, color) => ({
+  // === MINI SPARKLINE CHARTS (opsional di card ringkasan) ===
+  const optionsMini = (data, color) => ({
     chart: { type: "area", height: 60, sparkline: { enabled: true } },
     stroke: { curve: "smooth", width: 2 },
     fill: { opacity: 0.3 },
@@ -57,22 +64,21 @@ function renderCharts() {
   });
 
   if (document.querySelector("#chartLuas")) {
-    new ApexCharts(document.querySelector("#chartLuas"), optionsMini([10, 15, 20, 18, 22, 25], "#008FFB")).render();
-  }
-
-  if (document.querySelector("#chartKomoditas")) {
-    new ApexCharts(document.querySelector("#chartKomoditas"), optionsMini([5, 10, 8, 12, 15, 13], "#00E396")).render();
+    new ApexCharts(
+      document.querySelector("#chartLuas"),
+      optionsMini([20000, 21000, 22000, 24000, 25000], "#008FFB")
+    ).render();
   }
 
   if (document.querySelector("#chartHargaRata")) {
-    new ApexCharts(document.querySelector("#chartHargaRata"), optionsMini([2000, 2200, 2100, 2500, 2400], "#FEB019")).render();
-  }
-
-  if (document.querySelector("#chartHargaTinggi")) {
-    new ApexCharts(document.querySelector("#chartHargaTinggi"), optionsMini([2500, 2800, 2600, 3000, 2900], "#FF4560")).render();
+    new ApexCharts(
+      document.querySelector("#chartHargaRata"),
+      optionsMini([6000, 6200, 6400, 6700, 6800], "#FEB019")
+    ).render();
   }
 }
 
+// === RENDER TABEL DATA DETAIL ===
 function renderTable(data) {
   const tbody = document.querySelector("#tabelPanen tbody");
   tbody.innerHTML = "";
@@ -82,9 +88,9 @@ function renderTable(data) {
         <td>${i + 1}</td>
         <td>${item.kecamatan}</td>
         <td>${item.komoditas}</td>
-        <td>${item.luas}</td>
-        <td>${item.produksi}</td>
-        <td>${item.harga}</td>
+        <td>${item.luas.toLocaleString()} Ha</td>
+        <td>${item.produksi.toLocaleString()} Ton</td>
+        <td>Rp ${parseInt(item.harga).toLocaleString()}</td>
       </tr>`;
   });
 }
