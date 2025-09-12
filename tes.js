@@ -5,35 +5,47 @@ function renderCharts() {
     const pieOptions = {
       chart: { type: "donut", height: 400 },
       labels: ["Padi", "Jagung", "Kedelai", "Kopi", "Cabai"],
-      series: [45, 30, 15, 7, 3], // contoh data %
+      series: [45, 30, 15, 7, 3],
       legend: { position: "bottom" },
       dataLabels: { formatter: (val) => val.toFixed(1) + "%" },
-      responsive: [{
-        breakpoint: 768,
-        options: { chart: { height: 300 } }
-      }]
+      responsive: [{ breakpoint: 768, options: { chart: { height: 300 } } }]
     };
     new ApexCharts(pieEl, pieOptions).render();
   }
 
   // === BAR CHART: Luas Panen per Kecamatan ===
-  const barEl = document.querySelector("#horizontalBarChart");
-  if (barEl) {
-    const barOptions = {
-      chart: { type: "bar", height: 400 },
-      series: [{
-        name: "Luas Panen (Ha)",
-        data: [1200, 1500, 800, 600, 1000] // contoh data
-      }],
-      xaxis: {
-        categories: ["Kec. A", "Kec. B", "Kec. C", "Kec. D", "Kec. E"],
-        labels: { style: { fontSize: "12px" } }
-      },
-      plotOptions: { bar: { horizontal: true, borderRadius: 4 } },
-      colors: ["#2E7D32"]
-    };
-    new ApexCharts(barEl, barOptions).render();
-  }
+const barEl = document.querySelector("#horizontalBarChart");
+if (barEl && window.regionIds) {
+  // Ambil hanya 5 kecamatan pertama
+  const selectedIds = window.regionIds.slice(0, 5);
+
+  // Data dummy
+  const dataDummy = selectedIds.map(() => Math.floor(Math.random() * 1500) + 500);
+
+  const categories = selectedIds.map(id => window.kecamatanNames[id] || id);
+  const colors = selectedIds.map((id, i) => window.colors[i % window.colors.length]);
+
+  const barOptions = {
+    chart: { type: "bar", height: 400 },
+    plotOptions: {
+      bar: {
+        horizontal: true,   // ✅ bikin horizontal
+        distributed: true,  // ✅ warna beda tiap bar
+        borderRadius: 4
+      }
+    },
+    series: [{
+      name: "Luas Panen (Ha)",
+      data: dataDummy
+    }],
+    xaxis: { categories },
+    colors: colors,        // ✅ warnanya sesuai kecamatan
+    legend: { show: false } // ✅ hapus legend
+  };
+
+  new ApexCharts(barEl, barOptions).render();
+}
+
 
   // === LINE CHART: Tren Harga per Tahun ===
   const lineEl = document.querySelector("#lineChart");
@@ -51,30 +63,6 @@ function renderCharts() {
       colors: ["#1E88E5", "#FB8C00", "#8E24AA"]
     };
     new ApexCharts(lineEl, lineOptions).render();
-  }
-
-  // === MINI SPARKLINE CHARTS (opsional di card ringkasan) ===
-  const optionsMini = (data, color) => ({
-    chart: { type: "area", height: 60, sparkline: { enabled: true } },
-    stroke: { curve: "smooth", width: 2 },
-    fill: { opacity: 0.3 },
-    colors: [color],
-    series: [{ data: data }],
-    tooltip: { enabled: false }
-  });
-
-  if (document.querySelector("#chartLuas")) {
-    new ApexCharts(
-      document.querySelector("#chartLuas"),
-      optionsMini([20000, 21000, 22000, 24000, 25000], "#008FFB")
-    ).render();
-  }
-
-  if (document.querySelector("#chartHargaRata")) {
-    new ApexCharts(
-      document.querySelector("#chartHargaRata"),
-      optionsMini([6000, 6200, 6400, 6700, 6800], "#FEB019")
-    ).render();
   }
 }
 
