@@ -5,10 +5,12 @@
     <div class="row">
       <!-- Konten utama -->
       <div class="col-md-12 content-area">
+
         <!-- Breadcrumb -->
         <nav aria-label="breadcrumb" class="mb-3">
           <ol class="breadcrumb bg-light p-2 rounded small mb-0"></ol>
         </nav>
+
         <div class="single-berita">
           <div class="card" style="width: 100%; display: none;">
             <div class="card-header">
@@ -24,6 +26,7 @@
             <div id="komentar"></div>
           </div>
         </div>
+
       </div>
     </div>
   </div>
@@ -32,162 +35,134 @@
 <cms:pre:render>CMS_Include('footer.html')</cms:pre:render>
 
 <style>
-  /* Biar row kiri & kanan sama tinggi */
-  .row-equal {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: stretch;
-  }
+/* ================== Pie & Map Styles ================== */
+#pieChart {
+  width: 100%;
+  height: 100% !important;
+}
 
-  .row-equal>[class*='col-'] {
-    display: flex;
-    flex-direction: column;
-  }
+#mapLegend {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 4px 8px;
+  font-size: 12px;
+}
 
-  /* Biar pie chart ikut penuh tinggi card */
-  #pieChart {
-    width: 100%;
-    height: 100% !important;
-  }
+#mapLegend .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  white-space: nowrap;
+}
 
-  #mapLegend {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 4px 8px;
-    font-size: 12px;
-  }
+#mapLegend .legend-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 2px;
+  border: 1px solid #aaa;
+}
 
-  #mapLegend .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-  }
+/* ================== KPI Card Styles ================== */
+.kpi-card {
+  overflow: hidden;
+  position: relative;
+  box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
+  border-radius: 0.5em;
+  padding: 1.2em;
+  font-family: sans-serif;
+  color: #fff;
+  height: 100%;
+}
 
-  #mapLegend .legend-color {
-    width: 14px;
-    height: 14px;
-    border-radius: 2px;
-    border: 1px solid #aaa;
-  }
+.kpi-card .card-value {
+  display: block;
+  font-size: 180%;
+  font-weight: bolder;
+}
 
-  .kpi-card {
-    overflow: hidden;
-    position: relative;
-    box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
-    border-radius: 0.5em;
-    padding: 1.2em;
-    font-family: sans-serif;
-    color: #fff;
-    height: 100%;
-  }
+.kpi-card .card-text {
+  display: block;
+  font-size: 80%;
+  margin-top: 0.3rem;
+}
 
-  .kpi-card .card-value {
-    display: block;
-    font-size: 180%;
-    font-weight: bolder;
-  }
+.kpi-card .icon {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.6rem;
+  font-size: 300%;
+  opacity: 0.2;
+}
 
-  .kpi-card .card-text {
-    display: block;
-    font-size: 80%;
-    margin-top: 0.3rem;
-  }
-
-  .kpi-card .icon {
-    position: absolute;
-    top: 0.4rem;
-    right: 0.6rem;
-    font-size: 300%;
-    opacity: 0.2;
-  }
-
-  /* Variasi warna */
-  .orange {
-    background: #ffc241;
-    color: #fff;
-  }
-
-  .purple {
-    background: #886ab5;
-    color: #fff;
-  }
-
-  .grey-dark {
-    background: #495057;
-    color: #efefef;
-  }
-
-  .red {
-    background: #a83b3b;
-    color: #fff;
-  }
-
-  .red-gradient {
-    background: linear-gradient(180deg, rgba(207, 82, 82, 1) 0%, rgba(121, 9, 9, 1) 80%);
-    color: #fff;
-  }
+/* Warna KPI Cards */
+.orange { background: #ffc241; color: #fff; }
+.purple { background: #886ab5; color: #fff; }
+.grey-dark { background: #495057; color: #efefef; }
+.red { background: #a83b3b; color: #fff; }
+.red-gradient {
+  background: linear-gradient(180deg, rgba(207,82,82,1) 0%, rgba(121,9,9,1) 80%);
+  color: #fff;
+}
 </style>
 
 <script type="text/javascript">
-  CMS.Loaded(async function () {
-    setIcon(CMS_Setting('icon'));
+CMS.Loaded(async function () {
+  setIcon(CMS_Setting('icon'));
 
-    function sosmed(judul) {
-      const url = window.location.href;
-      return `
-        <a href="//www.facebook.com/share.php?u=${url}" target="_blank">
-            <img src="/themes/_ceudah-copy/assets/images/facebook.png" width="24" height="24" />
-        </a>
-        <a href="//twitter.com/intent/tweet?url=${url}&text=${judul}" target="_blank">
-            <img src="/themes/_ceudah-copy/assets/images/twitter.png" width="24" height="24" />
-        </a>
-        <a href="whatsapp://send?text=${judul} ${url}" target="_blank">
-            <img src="/themes/_ceudah-copy/assets/images/whatsapp.png" width="24" height="24" />
-        </a>`;
-    }
+  function sosmed(judul) {
+    const url = window.location.href;
+    return `
+      <a href="//www.facebook.com/share.php?u=${url}" target="_blank">
+        <img src="/themes/_ceudah-copy/assets/images/facebook.png" width="24" height="24" />
+      </a>
+      <a href="//twitter.com/intent/tweet?url=${url}&text=${judul}" target="_blank">
+        <img src="/themes/_ceudah-copy/assets/images/twitter.png" width="24" height="24" />
+      </a>
+      <a href="whatsapp://send?text=${judul} ${url}" target="_blank">
+        <img src="/themes/_ceudah-copy/assets/images/whatsapp.png" width="24" height="24" />
+      </a>`;
+  }
 
-    // Fetch data JSON
-    const jsonPath = '/json' + cleanSlash(window.location.pathname) + '.json?mode=origin';
-    try {
-      const res = await fetch(jsonPath);
-      if (!res.ok) throw new Error(res.statusText);
-      const json = await res.json();
+  // Fetch JSON data
+  const jsonPath = '/json' + cleanSlash(window.location.pathname) + '.json?mode=origin';
+  try {
+    const res = await fetch(jsonPath);
+    if (!res.ok) throw new Error(res.statusText);
+    const json = await res.json();
 
-      $(".share-link").append(sosmed(json.judul));
+    $(".share-link").append(sosmed(json.judul));
 
-      // Render breadcrumb
-      $(".breadcrumb").html(`
-  <li class="breadcrumb-item"><a href="/">Home</a></li>
-  <li class="breadcrumb-item"><a href="/${segments(1)}">${segments(1)}</a></li>
-  <li class="breadcrumb-item active" aria-current="page">${json.judul}</li>
-`);
+    // Render Breadcrumb
+    $(".breadcrumb").html(`
+      <li class="breadcrumb-item"><a href="/">Home</a></li>
+      <li class="breadcrumb-item"><a href="/${segments(1)}">${segments(1)}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">${json.judul}</li>
+    `);
 
-      if (segments(1) === 'halaman' && segments(2) === 'chart-panen') {
-        setTitle("Dashboard " + json.judul);
+    if (segments(1) === 'halaman' && segments(2) === 'chart-panen') {
+      setTitle("Dashboard " + json.judul);
 
-        // Render dashboard HTML
-        $(".judul-berita").html(json.judul);
-        $(".isi-berita").html(`
+      $(".judul-berita").html(json.judul);
+
+      $(".isi-berita").html(`
 <!-- 🔍 FILTER -->
 <div class="card shadow-sm mb-3">
-  <div class="card-header fw-bold">🔍 FILTER</div>
   <div class="card-body">
     <div class="row g-3 align-items-center">
       <div class="col-md-4">
-        <label class="form-label fw-semibold">Kecamatan</label>
+        <label class="form-label fw-semibold"><strong>Kecamatan</strong></label>
         <select class="form-select custom-select" id="filterKecamatan">
           <option selected>-- Semua Kecamatan --</option>
         </select>
       </div>
       <div class="col-md-4">
-        <label class="form-label fw-semibold">Komoditas</label>
+        <label class="form-label fw-semibold"><strong>Komoditas</strong></label>
         <select class="form-select custom-select" id="filterKomoditas">
           <option selected>-- Semua Komoditas --</option>
         </select>
       </div>
       <div class="col-md-4">
-        <label class="form-label fw-semibold">Tahun</label>
+        <label class="form-label fw-semibold"><strong>Tahun</strong></label>
         <select class="form-select custom-select" id="filterTahun">
           <option>2020</option>
           <option>2021</option>
@@ -201,44 +176,43 @@
   </div>
 </div>
 
-<!-- 📌 RINGKASAN -->
 <!-- 📌 RINGKASAN KPI -->
 <div class="row mb-3 text-center">
   <div class="col-md-3">
     <div class="kpi-card orange">
       <span id="totalLuas" class="card-value">25.300</span><small> Ha</small><br>
-      <span class="card-text">Total Luas Panen</span>
+      <span class="card-text"><strong>Total Luas Panen</strong></span>
       <i class="fas fa-seedling icon"></i>
     </div>
   </div>
   <div class="col-md-3">
     <div class="kpi-card purple">
       <span id="hargaRata" class="card-value">6.800</span><small> Rp/kg</small><br>
-      <span class="card-text">Harga Rata-rata</span>
+      <span class="card-text"><strong>Harga Rata-rata</strong></span>
       <i class="fas fa-coins icon"></i>
     </div>
   </div>
   <div class="col-md-3">
     <div class="kpi-card grey-dark">
       <span id="kecTerluas" class="card-value">Kec. A</span><br>
-      <span class="card-text">Kecamatan Terluas</span>
+      <span class="card-text"><strong>Kecamatan Terluas</strong></span>
       <i class="fas fa-map-marker-alt icon"></i>
     </div>
   </div>
   <div class="col-md-3">
     <div class="kpi-card red">
       <span id="komTerluas" class="card-value">Padi</span><br>
-      <span class="card-text">Komoditas Terluas</span>
+      <span class="card-text"><strong>Komoditas Terluas</strong></span>
       <i class="fas fa-leaf icon"></i>
     </div>
   </div>
 </div>
 
-<!-- 🗺️ PETA & GRAFIK (Row 1) -->
+<!-- 🗺️ PETA & GRAFIK -->
 <div class="row mb-3">
   <div class="col-lg-6 d-flex">
     <div class="card shadow-sm flex-fill">
-      <div class="card-header text-center fw-bold">📊 Bar Chart : Luas Panen</div>
+      <div class="card-header text-center fw-bold"><strong>Luas Panen</strong></div>
       <div class="card-body">
         <div id="horizontalBarChart" style="height:400px;"></div>
       </div>
@@ -246,7 +220,7 @@
   </div>
   <div class="col-lg-6 d-flex">
     <div class="card shadow-sm flex-fill">
-      <div class="card-header text-center fw-bold">🗺️ Peta Kabupaten</div>
+      <div class="card-header text-center fw-bold"><strong>Peta Kabupaten</strong></div>
       <div class="card-body">
         <div id="mapContainer" style="height:400px;"></div>
         <div id="mapLegend" class="mt-2"></div>
@@ -255,11 +229,11 @@
   </div>
 </div>
 
-<!-- 📊 PIE & LINE CHART (Row 2) -->
+<!-- 📊 PIE & LINE CHART -->
 <div class="row mb-3">
   <div class="col-lg-6 d-flex">
     <div class="card shadow-sm flex-fill">
-      <div class="card-header text-center fw-bold">📊 Pie Chart : Distribusi Komoditas</div>
+      <div class="card-header text-center fw-bold"><strong>Distribusi Komoditas</strong></div>
       <div class="card-body d-flex justify-content-center align-items-center">
         <div id="pieChart" style="height:400px;"></div>
       </div>
@@ -267,7 +241,7 @@
   </div>
   <div class="col-lg-6 d-flex">
     <div class="card shadow-sm flex-fill">
-      <div class="card-header text-center fw-bold">📈 Line Chart : Tren Harga Komoditas</div>
+      <div class="card-header text-center fw-bold"><strong>Tren Harga Komoditas</strong></div>
       <div class="card-body">
         <div id="lineChart" style="height:400px;"></div>
       </div>
@@ -277,29 +251,26 @@
 
 <!-- 📋 DATA DETAIL -->
 <div class="card shadow-sm mb-3">
-  <div class="card-header text-center fw-bold">📋 Data Panen Per Kecamatan</div>
+  <div class="card-header text-center fw-bold"><strong>Data Panen Per Kecamatan</strong></div>
   <div class="card-body table-responsive">
     <table class="table table-striped table-hover table-bordered mb-0" id="tabelPanen">
       <thead class="table-light">
         <tr>
           <th>No</th>
-          <th>Kecamatan</th>
-          <th>Komoditas</th>
-          <th>Luas (Ha)</th>
-          <th>Produksi (Ton)</th>
-          <th>Harga (Rp/Kg)</th>
+          <th><strong>Kecamatan</strong></th>
+          <th><strong>Komoditas</strong></th>
+          <th><strong>Luas (Ha)</strong></th>
+          <th><strong>Produksi (Ton)</strong></th>
+          <th><strong>Harga (Rp/Kg)</strong></th>
         </tr>
       </thead>
-      <tbody>
-        <!-- Data diisi lewat JS -->
-      </tbody>
+      <tbody></tbody>
     </table>
   </div>
 </div>
 
 <!-- 📂 FITUR TAMBAHAN -->
 <div class="card shadow-sm mb-3">
-  <div class="card-header fw-bold">📂 Fitur Tambahan</div>
   <div class="card-body text-end">
     <button class="btn btn-success btn-sm">Export ke Excel</button>
     <button class="btn btn-danger btn-sm">Export ke PDF</button>
@@ -309,54 +280,50 @@
 </div>
 `);
 
-        $(".card").fadeIn();
+      $(".card").fadeIn();
 
-        // ================= Load Script Secara Aman =================
-        const loadScript = src => new Promise(res => {
-          const s = document.createElement("script");
-          s.src = src;
-          s.onload = res;
-          document.body.appendChild(s);
-        });
+      // ================= Load Script =================
+      const loadScript = src => new Promise(res => {
+        const s = document.createElement("script");
+        s.src = src;
+        s.onload = res;
+        document.body.appendChild(s);
+      });
 
-        // Urutan load: ApexCharts → chart-dashboard → jsVectorMap → peta Aceh Utara → map-dashboard
-        await loadScript("https://cdn.jsdelivr.net/npm/apexcharts");
-        await loadScript("/themes/_ceudah-copy/assets/js/chart-dashboard.js?v=" + Date.now());
-        await loadScript("https://cdn.jsdelivr.net/npm/jsvectormap");
-        await loadScript("/themes/_ceudah-copy/assets/js/kecamatanmap.js?v=" + Date.now());
-        await loadScript("/themes/_ceudah-copy/assets/js/map-dashboard.js?v=" + Date.now());
+      await loadScript("https://cdn.jsdelivr.net/npm/apexcharts");
+      await loadScript("/themes/_ceudah-copy/assets/js/chart-dashboard.js?v=" + Date.now());
+      await loadScript("https://cdn.jsdelivr.net/npm/jsvectormap");
+      await loadScript("/themes/_ceudah-copy/assets/js/kecamatanmap.js?v=" + Date.now());
+      await loadScript("/themes/_ceudah-copy/assets/js/map-dashboard.js?v=" + Date.now());
 
-        // Panggil fungsi
-        renderMap();
-        renderCharts();
+      renderMap();
+      renderCharts();
 
-        // Dummy data jika json.dataKecamatan belum ada
-        const dummyData = [
-          { kecamatan: "Lhoksukon", komoditas: "Padi", luas: 1200, produksi: 3500, harga: "5,200" },
-          { kecamatan: "Samudera", komoditas: "Jagung", luas: 800, produksi: 2100, harga: "4,800" },
-          { kecamatan: "Seunuddon", komoditas: "Kedelai", luas: 600, produksi: 1500, harga: "6,000" },
-          { kecamatan: "Tanah Jambo Aye", komoditas: "Padi", luas: 1000, produksi: 3000, harga: "5,100" },
-          { kecamatan: "Langkahan", komoditas: "Cabai", luas: 400, produksi: 900, harga: "20,000" }
-        ];
+      // Dummy Data
+      const dummyData = [
+        { kecamatan: "Lhoksukon", komoditas: "Padi", luas: 1200, produksi: 3500, harga: "5,200" },
+        { kecamatan: "Samudera", komoditas: "Jagung", luas: 800, produksi: 2100, harga: "4,800" },
+        { kecamatan: "Seunuddon", komoditas: "Kedelai", luas: 600, produksi: 1500, harga: "6,000" },
+        { kecamatan: "Tanah Jambo Aye", komoditas: "Padi", luas: 1000, produksi: 3000, harga: "5,100" },
+        { kecamatan: "Langkahan", komoditas: "Cabai", luas: 400, produksi: 900, harga: "20,000" }
+      ];
 
-        // Jika JSON tidak punya dataKecamatan → gunakan dummy
-        if (json.dataKecamatan && json.dataKecamatan.length > 0) {
-          renderTable(json.dataKecamatan);
-        } else {
-          renderTable(dummyData);
-        }
-
-
-
+      if (json.dataKecamatan && json.dataKecamatan.length > 0) {
+        renderTable(json.dataKecamatan);
       } else {
-        // Halaman biasa
-        $(".judul-berita").html(json.judul);
-        $(".isi-berita").html(json.konten);
-        $(".card").fadeIn();
+        renderTable(dummyData);
       }
-    } catch (err) {
-      console.error(err);
-      $(".daftar-berita").html(Page404());
+
+    } else {
+      // Halaman biasa
+      $(".judul-berita").html(json.judul);
+      $(".isi-berita").html(json.konten);
+      $(".card").fadeIn();
     }
-  });
+
+  } catch (err) {
+    console.error(err);
+    $(".daftar-berita").html(Page404());
+  }
+});
 </script>
