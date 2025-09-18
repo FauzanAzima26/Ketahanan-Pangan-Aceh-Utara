@@ -151,9 +151,9 @@
             const arr = Array.isArray(json) ? json : (json.dataKecamatan || []);
 
             // inject tahun saja
-            arr.forEach(d => {
-              d.tahun = thn;
-            });
+arr.forEach(d => {
+  d.tahun = thn;
+});
 
             allData.push(...arr);
           }
@@ -318,6 +318,7 @@
         </thead>
         <tbody></tbody>
       </table>
+<div id="pagination" class="mt-2"></div>
     </div>
   </div>
 </div>`);

@@ -2,6 +2,8 @@
 let pieChart = null;
 let barChart = null;
 let lineChart = null;
+let currentPage = 1;
+const rowsPerPage = 26;
 
 // === Fungsi render TABLE ===
 function renderTable(data) {
@@ -16,10 +18,15 @@ function renderTable(data) {
     return;
   }
 
-  data.forEach((d, i) => {
+  // 🚀 hitung pagination
+  const start = (currentPage - 1) * rowsPerPage;
+  const end = start + rowsPerPage;
+  const pageData = data.slice(start, end);
+
+  pageData.forEach((d, i) => {
     const row = `
       <tr>
-        <td>${i + 1}</td>
+        <td>${start + i + 1}</td>
         <td>${d.kecamatan}</td>
         <td>${d.komoditas}</td>
         <td>${d.luas.toLocaleString()}</td>
@@ -29,6 +36,27 @@ function renderTable(data) {
     `;
     tbody.insertAdjacentHTML("beforeend", row);
   });
+
+  renderPagination(data.length);
+}
+
+function renderPagination(totalRows) {
+  const container = document.getElementById("pagination");
+  if (!container) return;
+
+  container.innerHTML = "";
+  const totalPages = Math.ceil(totalRows / rowsPerPage);
+
+  for (let i = 1; i <= totalPages; i++) {
+    const btn = document.createElement("button");
+    btn.textContent = i;
+    btn.className = "btn btn-sm " + (i === currentPage ? "btn-primary" : "btn-light");
+    btn.addEventListener("click", () => {
+      currentPage = i;
+      applyFilters();
+    });
+    container.appendChild(btn);
+  }
 }
 
 // === Fungsi render CHARTS ===
@@ -41,10 +69,12 @@ function renderCharts(dataJson) {
   // === Tentukan dataset berdasarkan filter ===
   let filteredData = [];
   if (selectedKec) {
+    // kalau user pilih kecamatan spesifik → tampilkan data kecamatan itu SAJA (tanpa Aceh Utara)
     filteredData = dataJson.filter(
       (d) => d.kecamatan === selectedKec && d.kecamatan !== "Aceh Utara"
     );
   } else {
+    // kalau tidak pilih kecamatan → pakai data agregat "Aceh Utara"
     filteredData = dataJson.filter((d) => d.kecamatan === "Aceh Utara");
   }
 
@@ -53,14 +83,28 @@ function renderCharts(dataJson) {
   // === 🔥 UPDATE FILTER KOMODITAS ===
   let filterSelect = document.getElementById("filterKomoditas");
   if (filterSelect) {
+    const currentValue = filterSelect.value; // simpan pilihan terakhir
     const komoditasSet = new Set(dataJson.map((d) => d.komoditas));
-    filterSelect.innerHTML = ""; // hapus option lama
+
+    filterSelect.innerHTML = ""; // hapus semua option lama
+
+    // 🚀 tambahkan opsi default
+    const defaultOpt = document.createElement("option");
+    defaultOpt.value = "";
+    defaultOpt.textContent = "-- Semua Komoditas --";
+    filterSelect.appendChild(defaultOpt);
+
     komoditasSet.forEach((k) => {
       const opt = document.createElement("option");
       opt.value = k;
       opt.textContent = k;
       filterSelect.appendChild(opt);
     });
+
+    // 🚀 kembalikan pilihan sebelumnya kalau masih ada
+    if ([...komoditasSet, ""].includes(currentValue)) {
+      filterSelect.value = currentValue;
+    }
   }
 
   // === PIE CHART ===
@@ -74,83 +118,82 @@ function renderCharts(dataJson) {
     });
 
     const labels = Object.keys(agg);
-    const series = Object.values(agg);
+const series = Object.values(agg);
 
-    const pieOptions = {
-      chart: { type: "donut", height: 400 },
-      labels: labels,
-      series: series,
-      legend: { show: false },
-      dataLabels: {
-        formatter: (val) => val.toFixed(1) + "%",
-      },
-      tooltip: {
-        y: { formatter: (val) => val.toLocaleString() + " hektar" },
-      },
-      noData: {
-        text: "Tidak ada data",
-        align: "center",
-        verticalAlign: "middle",
-        style: { fontSize: "14px", color: "#888" },
-      },
-    };
+const pieOptions = {
+  chart: { type: "donut", height: 400 },
+  labels,
+  series: series.length > 0 ? series : [], // ⬅️ kosongkan kalau tidak ada data
+  legend: { show: false },
+  dataLabels: {
+    formatter: (val) => val.toFixed(1) + "%",
+  },
+  tooltip: {
+    y: { formatter: (val) => val.toLocaleString() + " hektar" },
+  },
+  noData: {
+    text: "Tidak ada data",
+    align: "center",
+    verticalAlign: "middle",
+    style: { fontSize: "14px", color: "#888" },
+  },
+};
 
-    if (pieChart) {
-      pieChart.destroy();
+if (pieChart) pieChart.destroy();
+
+pieChart = new ApexCharts(pieEl, pieOptions);
+pieChart.render();
+
+    if (series.length === 0) {
+      pieChart.updateSeries([]);
     }
-    pieChart = new ApexCharts(pieEl, pieOptions);
-    pieChart.render();
   }
 
   // === BAR CHART ===
   const barEl = document.querySelector("#horizontalBarChart");
   if (barEl) {
     const agg = {};
-    filteredData.forEach((d) => {
-      if (!agg[d.kecamatan]) agg[d.kecamatan] = 0;
-      agg[d.kecamatan] += d.luas;
-    });
+    // 🚀 hitung per kecamatan, kecuali Aceh Utara
+    dataJson
+      .filter((d) => d.kecamatan !== "Aceh Utara")
+      .forEach((d) => {
+        if (!agg[d.kecamatan]) agg[d.kecamatan] = 0;
+        agg[d.kecamatan] += d.luas;
+      });
 
     let arr = Object.entries(agg).map(([kec, luas]) => ({ kec, luas }));
     arr.sort((a, b) => b.luas - a.luas);
-    arr = arr.slice(0, 10);
+    arr = arr.slice(0, 10); // ambil 10 teratas
 
     const categories = arr.map((d) => d.kec);
     const seriesData = arr.map((d) => d.luas);
 
     const barOptions = {
-      chart: { type: "bar", height: 400 },
-      plotOptions: {
-        bar: { horizontal: true, distributed: true, borderRadius: 4 },
-      },
-      series: [{ name: "Luas Panen (Ha)", data: seriesData }],
-      xaxis: { categories },
-      colors: [
-        "#1E88E5",
-        "#FB8C00",
-        "#8E24AA",
-        "#43A047",
-        "#F4511E",
-        "#3949AB",
-        "#00897B",
-        "#FDD835",
-        "#6D4C41",
-        "#E53935",
-      ],
-      legend: { show: false },
-      noData: {
-        text: "Tidak ada data",
-        align: "center",
-        verticalAlign: "middle",
-        style: { fontSize: "14px", color: "#888" },
-      },
-    };
+  chart: { type: "bar", height: 400 },
+  plotOptions: {
+    bar: { horizontal: true, distributed: true, borderRadius: 4 },
+  },
+  series: [
+    { name: "Luas Panen (Ha)", data: seriesData.length > 0 ? seriesData : [] }
+  ],
+  xaxis: { categories },
+  legend: { show: false },
+  noData: {
+    text: "Tidak ada data",
+    align: "center",
+    verticalAlign: "middle",
+    style: { fontSize: "14px", color: "#888" },
+  },
+};
 
-    if (barChart) {
-      barChart.destroy(); // 🚀 reset chart
+if (barChart) barChart.destroy();
+
+barChart = new ApexCharts(barEl, barOptions);
+barChart.render();
+
+    if (seriesData.length === 0) {
+      barChart.updateSeries([]);
     }
-    barChart = new ApexCharts(barEl, barOptions);
-    barChart.render();
   }
 
   // === LINE CHART (dummy data dulu) ===
