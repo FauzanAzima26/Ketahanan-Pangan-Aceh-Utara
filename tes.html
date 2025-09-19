@@ -127,15 +127,15 @@
     function sosmed(judul) {
       const url = window.location.href;
       return `
-        <a href="//www.facebook.com/share.php?u=${url}" target="_blank">
-          <img src="/themes/_ceudah-copy/assets/images/facebook.png" width="24" height="24" />
-        </a>
-        <a href="//twitter.com/intent/tweet?url=${url}&text=${judul}" target="_blank">
-          <img src="/themes/_ceudah-copy/assets/images/twitter.png" width="24" height="24" />
-        </a>
-        <a href="whatsapp://send?text=${judul} ${url}" target="_blank">
-          <img src="/themes/_ceudah-copy/assets/images/whatsapp.png" width="24" height="24" />
-        </a>`;
+      <a href="//www.facebook.com/share.php?u=${url}" target="_blank">
+        <img src="/themes/_ceudah-copy/assets/images/facebook.png" width="24" height="24" />
+      </a>
+      <a href="//twitter.com/intent/tweet?url=${url}&text=${judul}" target="_blank">
+        <img src="/themes/_ceudah-copy/assets/images/twitter.png" width="24" height="24" />
+      </a>
+      <a href="whatsapp://send?text=${judul} ${url}" target="_blank">
+        <img src="/themes/_ceudah-copy/assets/images/whatsapp.png" width="24" height="24" />
+      </a>`;
     }
 
     try {
@@ -149,12 +149,7 @@
           if (res.ok) {
             const json = await res.json();
             const arr = Array.isArray(json) ? json : (json.dataKecamatan || []);
-
-            // inject tahun saja
-arr.forEach(d => {
-  d.tahun = thn;
-});
-
+            arr.forEach(d => { d.tahun = thn; });
             allData.push(...arr);
           }
         } catch (e) {
@@ -162,7 +157,6 @@ arr.forEach(d => {
         }
       }
 
-      // Kalau kosong, fallback dummy
       if (allData.length === 0) {
         allData = [
           { kecamatan: "Lhoksukon", komoditas: "Padi", luas: 1200, produksi: 3500, harga: 5200, tahun: 2020 },
@@ -173,10 +167,10 @@ arr.forEach(d => {
       // ==== 2. Render judul & breadcrumb ====
       $(".share-link").append(sosmed("Luas Panen Aceh Utara"));
       $(".breadcrumb").html(`
-        <li class="breadcrumb-item"><a href="/">Home</a></li>
-        <li class="breadcrumb-item"><a href="/${segments(1)}">${segments(1)}</a></li>
-        <li class="breadcrumb-item active" aria-current="page">Luas Panen Aceh Utara</li>
-      `);
+      <li class="breadcrumb-item"><a href="/">Home</a></li>
+      <li class="breadcrumb-item"><a href="/${segments(1)}">${segments(1)}</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Luas Panen Aceh Utara</li>
+    `);
 
       if (segments(1) === "halaman" && segments(2) === "chart-panen") {
         setTitle("Dashboard Luas Panen Aceh Utara");
@@ -318,11 +312,10 @@ arr.forEach(d => {
         </thead>
         <tbody></tbody>
       </table>
-<div id="pagination" class="mt-2"></div>
+      <div id="pagination" class="mt-2"></div>
     </div>
   </div>
-</div>`);
-
+</div>`); // HTML dashboard seperti sebelumnya
         $(".card").fadeIn();
 
         // ==== 3. Load scripts eksternal ====
@@ -348,7 +341,7 @@ arr.forEach(d => {
         komSet.forEach(k => $("#filterKomoditas, #tableFilterKomoditas").append(`<option value="${k}">${k}</option>`));
         thnSet.forEach(t => $("#filterTahun, #tableFilterTahun").append(`<option value="${t}">${t}</option>`));
 
-        // ==== 5. Function apply filter global ====
+        // ==== 5. Filter untuk Chart (global) ====
         function applyFilters() {
           const kec = $("#filterKecamatan").val();
           const kom = $("#filterKomoditas").val();
@@ -360,29 +353,30 @@ arr.forEach(d => {
           if (thn) filtered = filtered.filter(d => String(d.tahun) === String(thn));
 
           renderCharts(filtered);
-          renderTable(filtered);
         }
-
-        // Bind filter global
         $("#filterKecamatan, #filterKomoditas, #filterTahun").on("change", applyFilters);
 
-        // Tabel filter
-        $("#tableFilterKecamatan, #tableFilterKomoditas, #tableFilterTahun").on("change", function () {
+        // ==== 6. Filter khusus Table ====
+        let currentTableData = [...allData]; // default semua data
+
+        function updateTable() {
           const kec = $("#tableFilterKecamatan").val();
           const kom = $("#tableFilterKomoditas").val();
           const thn = $("#tableFilterTahun").val();
 
-          let filtered = [...allData];
-          if (kec) filtered = filtered.filter(d => d.kecamatan === kec);
-          if (kom) filtered = filtered.filter(d => d.komoditas === kom);
-          if (thn) filtered = filtered.filter(d => String(d.tahun) === String(thn));
+          currentTableData = [...allData];
+          if (kec) currentTableData = currentTableData.filter(d => d.kecamatan === kec);
+          if (kom) currentTableData = currentTableData.filter(d => d.komoditas === kom);
+          if (thn) currentTableData = currentTableData.filter(d => String(d.tahun) === String(thn));
 
-          renderTable(filtered);
-        });
+          renderTable(currentTableData);
+        }
+        $("#tableFilterKecamatan, #tableFilterKomoditas, #tableFilterTahun").on("change", updateTable);
 
-        // ==== 6. Render awal ====
+        // ==== 7. Render awal ====
         renderMap();
-        applyFilters(); // default: semua data
+        applyFilters(); // chart semua data
+        updateTable();  // table semua data
       }
     } catch (err) {
       console.error("Gagal load JSON:", err);

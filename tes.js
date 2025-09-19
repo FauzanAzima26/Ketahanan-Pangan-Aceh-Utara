@@ -50,10 +50,11 @@ function renderPagination(totalRows) {
   for (let i = 1; i <= totalPages; i++) {
     const btn = document.createElement("button");
     btn.textContent = i;
-    btn.className = "btn btn-sm " + (i === currentPage ? "btn-primary" : "btn-light");
+    btn.className =
+      "btn btn-sm " + (i === currentPage ? "btn-primary" : "btn-light");
     btn.addEventListener("click", () => {
       currentPage = i;
-      applyFilters();
+      renderTable(currentTableData); // ✅ table saja
     });
     container.appendChild(btn);
   }
@@ -112,37 +113,39 @@ function renderCharts(dataJson) {
   if (pieEl) {
     const agg = {};
     filteredData.forEach((item) => {
-      const kom = item.komoditas;
-      if (!agg[kom]) agg[kom] = 0;
-      agg[kom] += item.luas;
+      if (item.luas > 0) {
+        // 🚀 hanya hitung kalau > 0
+        const kom = item.komoditas;
+        if (!agg[kom]) agg[kom] = 0;
+        agg[kom] += item.luas;
+      }
     });
 
     const labels = Object.keys(agg);
-const series = Object.values(agg);
+    const series = Object.values(agg);
 
-const pieOptions = {
-  chart: { type: "donut", height: 400 },
-  labels,
-  series: series.length > 0 ? series : [], // ⬅️ kosongkan kalau tidak ada data
-  legend: { show: false },
-  dataLabels: {
-    formatter: (val) => val.toFixed(1) + "%",
-  },
-  tooltip: {
-    y: { formatter: (val) => val.toLocaleString() + " hektar" },
-  },
-  noData: {
-    text: "Tidak ada data",
-    align: "center",
-    verticalAlign: "middle",
-    style: { fontSize: "14px", color: "#888" },
-  },
-};
+    const pieOptions = {
+      chart: { type: "donut", height: 400 },
+      labels,
+      series: series.length > 0 ? series : [],
+      legend: { show: false },
+      dataLabels: {
+        formatter: (val) => val.toFixed(1) + "%",
+      },
+      tooltip: {
+        y: { formatter: (val) => val.toLocaleString() + " hektar" },
+      },
+      noData: {
+        text: "Tidak ada data",
+        align: "center",
+        verticalAlign: "middle",
+        style: { fontSize: "14px", color: "#888" },
+      },
+    };
 
-if (pieChart) pieChart.destroy();
-
-pieChart = new ApexCharts(pieEl, pieOptions);
-pieChart.render();
+    if (pieChart) pieChart.destroy();
+    pieChart = new ApexCharts(pieEl, pieOptions);
+    pieChart.render();
 
     if (series.length === 0) {
       pieChart.updateSeries([]);
@@ -153,9 +156,8 @@ pieChart.render();
   const barEl = document.querySelector("#horizontalBarChart");
   if (barEl) {
     const agg = {};
-    // 🚀 hitung per kecamatan, kecuali Aceh Utara
     dataJson
-      .filter((d) => d.kecamatan !== "Aceh Utara")
+      .filter((d) => d.kecamatan !== "Aceh Utara" && d.luas > 0) // 🚀 skip kalau 0
       .forEach((d) => {
         if (!agg[d.kecamatan]) agg[d.kecamatan] = 0;
         agg[d.kecamatan] += d.luas;
@@ -163,33 +165,35 @@ pieChart.render();
 
     let arr = Object.entries(agg).map(([kec, luas]) => ({ kec, luas }));
     arr.sort((a, b) => b.luas - a.luas);
-    arr = arr.slice(0, 10); // ambil 10 teratas
+    arr = arr.slice(0, 10);
 
     const categories = arr.map((d) => d.kec);
     const seriesData = arr.map((d) => d.luas);
 
     const barOptions = {
-  chart: { type: "bar", height: 400 },
-  plotOptions: {
-    bar: { horizontal: true, distributed: true, borderRadius: 4 },
-  },
-  series: [
-    { name: "Luas Panen (Ha)", data: seriesData.length > 0 ? seriesData : [] }
-  ],
-  xaxis: { categories },
-  legend: { show: false },
-  noData: {
-    text: "Tidak ada data",
-    align: "center",
-    verticalAlign: "middle",
-    style: { fontSize: "14px", color: "#888" },
-  },
-};
+      chart: { type: "bar", height: 400 },
+      plotOptions: {
+        bar: { horizontal: true, distributed: true, borderRadius: 4 },
+      },
+      series: [
+        {
+          name: "Luas Panen (Ha)",
+          data: seriesData.length > 0 ? seriesData : [],
+        },
+      ],
+      xaxis: { categories },
+      legend: { show: false },
+      noData: {
+        text: "Tidak ada data",
+        align: "center",
+        verticalAlign: "middle",
+        style: { fontSize: "14px", color: "#888" },
+      },
+    };
 
-if (barChart) barChart.destroy();
-
-barChart = new ApexCharts(barEl, barOptions);
-barChart.render();
+    if (barChart) barChart.destroy();
+    barChart = new ApexCharts(barEl, barOptions);
+    barChart.render();
 
     if (seriesData.length === 0) {
       barChart.updateSeries([]);
