@@ -34,92 +34,6 @@
 
 <cms:pre:render>CMS_Include('footer.html')</cms:pre:render>
 
-<style>
-  /* === Pie & Map === */
-  #pieChart {
-    width: 100%;
-    height: 100% !important;
-  }
-
-  #mapLegend {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
-    gap: 4px 8px;
-    font-size: 12px;
-  }
-
-  #mapLegend .legend-item {
-    display: flex;
-    align-items: center;
-    gap: 4px;
-    white-space: nowrap;
-  }
-
-  #mapLegend .legend-color {
-    width: 14px;
-    height: 14px;
-    border-radius: 2px;
-    border: 1px solid #aaa;
-  }
-
-  /* === KPI Cards === */
-  .kpi-card {
-    overflow: hidden;
-    position: relative;
-    box-shadow: 1px 1px 4px rgba(0, 0, 0, 0.4);
-    border-radius: 0.5em;
-    padding: 1.2em;
-    font-family: sans-serif;
-    color: #fff;
-    height: 100%;
-  }
-
-  .kpi-card .card-value {
-    display: block;
-    font-size: 180%;
-    font-weight: bolder;
-  }
-
-  .kpi-card .card-text {
-    display: block;
-    font-size: 80%;
-    margin-top: 0.3rem;
-  }
-
-  .kpi-card .icon {
-    position: absolute;
-    top: 0.4rem;
-    right: 0.6rem;
-    font-size: 300%;
-    opacity: 0.2;
-  }
-
-  .orange {
-    background: #ffc241;
-    color: #fff;
-  }
-
-  .purple {
-    background: #886ab5;
-    color: #fff;
-  }
-
-  .grey-dark {
-    background: #495057;
-    color: #efefef;
-  }
-
-  .red {
-    background: #a83b3b;
-    color: #fff;
-  }
-
-  .red-gradient {
-    background: linear-gradient(180deg, rgba(207, 82, 82, 1) 0%, rgba(121, 9, 9, 1) 80%);
-    color: #fff;
-  }
-</style>
-
 <script type="text/javascript">
   CMS.Loaded(async function () {
     setIcon(CMS_Setting('icon'));
@@ -278,25 +192,29 @@
 
 <!-- 📋 DATA DETAIL -->
 <div class="card shadow-sm mb-3">
-  <div class="card-header fw-bold"><strong>Data Panen Per Kecamatan</strong></div>
   <div class="card-body">
-    <div class="row g-2 mb-3">
+    <div class="row g-3 align-items-center">
       <div class="col-md-4">
-        <select class="form-select" id="tableFilterKecamatan">
+        <label class="form-label fw-semibold"><strong>Kecamatan</strong></label>
+        <select class="form-select custom-select" id="tableFilterKecamatan">
           <option value="">-- Semua Kecamatan --</option>
         </select>
       </div>
       <div class="col-md-4">
-        <select class="form-select" id="tableFilterKomoditas">
+        <label class="form-label fw-semibold"><strong>Komoditas</strong></label>
+        <select class="form-select custom-select" id="tableFilterKomoditas">
           <option value="">-- Semua Komoditas --</option>
         </select>
       </div>
       <div class="col-md-4">
-        <select class="form-select" id="tableFilterTahun">
+        <label class="form-label fw-semibold"><strong>Tahun</strong></label>
+        <select class="form-select custom-select" id="tableFilterTahun">
           <option value="">-- Semua Tahun --</option>
         </select>
       </div>
     </div>
+  </div>
+</div>
 
     <div class="table-responsive">
       <table class="table table-striped table-hover table-bordered mb-0" id="tabelPanen">

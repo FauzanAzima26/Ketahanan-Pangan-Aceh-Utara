@@ -3,7 +3,9 @@ let pieChart = null;
 let barChart = null;
 let lineChart = null;
 let currentPage = 1;
-const rowsPerPage = 26;
+const rowsPerPage = 20; // ✅ tampilkan 20 data per halaman
+let currentTableData = []; // ✅ global
+
 
 // === Fungsi render TABLE ===
 function renderTable(data) {
@@ -18,10 +20,19 @@ function renderTable(data) {
     return;
   }
 
+  // ✅ filter Aceh Utara
+  const filteredData = data.filter(d => d.kecamatan !== "Aceh Utara");
+
+  // ✅ simpan ke global biar bisa dipakai di paginate
+  currentTableData = filteredData;
+
+  // ✅ urutkan abjad
+  currentTableData.sort((a, b) => a.kecamatan.localeCompare(b.kecamatan));
+
   // 🚀 hitung pagination
   const start = (currentPage - 1) * rowsPerPage;
   const end = start + rowsPerPage;
-  const pageData = data.slice(start, end);
+  const pageData = currentTableData.slice(start, end);
 
   pageData.forEach((d, i) => {
     const row = `
@@ -37,7 +48,7 @@ function renderTable(data) {
     tbody.insertAdjacentHTML("beforeend", row);
   });
 
-  renderPagination(data.length);
+  renderPagination(currentTableData.length);
 }
 
 function renderPagination(totalRows) {
@@ -47,17 +58,64 @@ function renderPagination(totalRows) {
   container.innerHTML = "";
   const totalPages = Math.ceil(totalRows / rowsPerPage);
 
+  if (totalPages <= 1) return; // kalau cuma 1 halaman, ga usah tampilkan
+
+  const paginationWrapper = document.createElement("div");
+  paginationWrapper.className = "pagination";
+
+  // Prev button
+  const prevBtn = document.createElement("button");
+  prevBtn.textContent = "«";
+  prevBtn.disabled = currentPage === 1;
+  prevBtn.addEventListener("click", () => {
+    if (currentPage > 1) {
+      currentPage--;
+      renderTable(currentTableData);
+    }
+  });
+  paginationWrapper.appendChild(prevBtn);
+
+  const maxVisible = 2; // jumlah halaman di kiri/kanan currentPage
+
   for (let i = 1; i <= totalPages; i++) {
-    const btn = document.createElement("button");
-    btn.textContent = i;
-    btn.className =
-      "btn btn-sm " + (i === currentPage ? "btn-primary" : "btn-light");
-    btn.addEventListener("click", () => {
-      currentPage = i;
-      renderTable(currentTableData); // ✅ table saja
-    });
-    container.appendChild(btn);
+    if (
+      i === 1 || // halaman pertama
+      i === totalPages || // halaman terakhir
+      (i >= currentPage - maxVisible && i <= currentPage + maxVisible)
+    ) {
+      const btn = document.createElement("button");
+      btn.textContent = i;
+      btn.className = i === currentPage ? "active" : "";
+      btn.addEventListener("click", () => {
+        currentPage = i;
+        renderTable(currentTableData);
+      });
+      paginationWrapper.appendChild(btn);
+    } else if (
+      i === currentPage - (maxVisible + 1) ||
+      i === currentPage + (maxVisible + 1)
+    ) {
+      // tambahkan ellipsis
+      const dots = document.createElement("span");
+      dots.textContent = "...";
+      dots.style.padding = "6px 10px";
+      paginationWrapper.appendChild(dots);
+    }
   }
+
+  // Next button
+  const nextBtn = document.createElement("button");
+  nextBtn.textContent = "»";
+  nextBtn.disabled = currentPage === totalPages;
+  nextBtn.addEventListener("click", () => {
+    if (currentPage < totalPages) {
+      currentPage++;
+      renderTable(currentTableData);
+    }
+  });
+  paginationWrapper.appendChild(nextBtn);
+
+  container.appendChild(paginationWrapper);
 }
 
 // === Fungsi render CHARTS ===
