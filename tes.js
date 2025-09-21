@@ -6,7 +6,6 @@ let currentPage = 1;
 const rowsPerPage = 20; // ✅ tampilkan 20 data per halaman
 let currentTableData = []; // ✅ global
 
-
 // === Fungsi render TABLE ===
 function renderTable(data) {
   const tbody = document.querySelector("#tabelPanen tbody");
@@ -21,7 +20,15 @@ function renderTable(data) {
   }
 
   // ✅ filter Aceh Utara
-  const filteredData = data.filter(d => d.kecamatan !== "Aceh Utara");
+  let filteredData = data.filter((d) => d.kecamatan !== "Aceh Utara");
+
+  // ✅ fallback: kalau hasil kosong (hanya ada Aceh Utara), tetap tampilkan agar tidak blank
+  if (filteredData.length === 0) {
+    tbody.innerHTML = `<tr>
+      <td colspan="6" class="text-center">Tidak ada data per-kecamatan</td>
+    </tr>`;
+    return;
+  }
 
   // ✅ simpan ke global biar bisa dipakai di paginate
   currentTableData = filteredData;
@@ -145,7 +152,7 @@ function renderCharts(dataJson) {
     const currentValue = filterSelect.value; // simpan pilihan terakhir
     const komoditasSet = new Set(dataJson.map((d) => d.komoditas));
 
-    filterSelect.innerHTML = ""; // hapus semua option lama
+    // filterSelect.innerHTML = ""; // hapus semua option lama
 
     // 🚀 tambahkan opsi default
     const defaultOpt = document.createElement("option");
@@ -153,12 +160,12 @@ function renderCharts(dataJson) {
     defaultOpt.textContent = "-- Semua Komoditas --";
     filterSelect.appendChild(defaultOpt);
 
-    komoditasSet.forEach((k) => {
-      const opt = document.createElement("option");
-      opt.value = k;
-      opt.textContent = k;
-      filterSelect.appendChild(opt);
-    });
+    // komoditasSet.forEach((k) => {
+    //   const opt = document.createElement("option");
+    //   opt.value = k;
+    //   opt.textContent = k;
+    //   filterSelect.appendChild(opt);
+    // });
 
     // 🚀 kembalikan pilihan sebelumnya kalau masih ada
     if ([...komoditasSet, ""].includes(currentValue)) {
@@ -211,65 +218,66 @@ function renderCharts(dataJson) {
   }
 
   // === BAR CHART ===
-const barEl = document.querySelector("#horizontalBarChart");
-if (barEl) {
-  const agg = {};
-  dataJson
-    .filter((d) => d.kecamatan !== "Aceh Utara" && d.luas > 0)
-    .forEach((d) => {
-      if (!agg[d.kecamatan]) agg[d.kecamatan] = 0;
-      agg[d.kecamatan] += d.luas;
+  const barEl = document.querySelector("#horizontalBarChart");
+  if (barEl) {
+    const agg = {};
+    dataJson
+      .filter((d) => d.kecamatan !== "Aceh Utara" && d.luas > 0)
+      .forEach((d) => {
+        if (!agg[d.kecamatan]) agg[d.kecamatan] = 0;
+        agg[d.kecamatan] += d.luas;
+      });
+
+    let arr = Object.entries(agg).map(([kec, luas]) => ({ kec, luas }));
+    arr.sort((a, b) => b.luas - a.luas);
+    arr = arr.slice(0, 10);
+
+    const categories = arr.map((d) => d.kec);
+    const seriesData = arr.map((d) => d.luas);
+
+    // 🔥 sesuaikan warna bar chart dengan warna map
+    const barColors = categories.map((kec) => {
+      const regionId = Object.keys(window.kecamatanNames).find(
+        (id) => window.kecamatanNames[id] === kec
+      );
+      if (regionId) {
+        const colorIndex =
+          window.regionIds.indexOf(regionId) % window.colors.length;
+        return window.colors[colorIndex];
+      }
+      return "#888"; // fallback
     });
 
-  let arr = Object.entries(agg).map(([kec, luas]) => ({ kec, luas }));
-  arr.sort((a, b) => b.luas - a.luas);
-  arr = arr.slice(0, 10);
-
-  const categories = arr.map((d) => d.kec);
-  const seriesData = arr.map((d) => d.luas);
-
-  // 🔥 sesuaikan warna bar chart dengan warna map
-  const barColors = categories.map((kec) => {
-    const regionId = Object.keys(window.kecamatanNames).find(
-      (id) => window.kecamatanNames[id] === kec
-    );
-    if (regionId) {
-      const colorIndex = window.regionIds.indexOf(regionId) % window.colors.length;
-      return window.colors[colorIndex];
-    }
-    return "#888"; // fallback
-  });
-
-  const barOptions = {
-    chart: { type: "bar", height: 400 },
-    plotOptions: {
-      bar: { horizontal: true, distributed: true, borderRadius: 4 },
-    },
-    series: [
-      {
-        name: "Luas Panen (Ha)",
-        data: seriesData.length > 0 ? seriesData : [],
+    const barOptions = {
+      chart: { type: "bar", height: 400 },
+      plotOptions: {
+        bar: { horizontal: true, distributed: true, borderRadius: 4 },
       },
-    ],
-    xaxis: { categories },
-    colors: barColors,
-    legend: { show: false },
-    noData: {
-      text: "Tidak ada data",
-      align: "center",
-      verticalAlign: "middle",
-      style: { fontSize: "14px", color: "#888" },
-    },
-  };
+      series: [
+        {
+          name: "Luas Panen (Ha)",
+          data: seriesData.length > 0 ? seriesData : [],
+        },
+      ],
+      xaxis: { categories },
+      colors: barColors,
+      legend: { show: false },
+      noData: {
+        text: "Tidak ada data",
+        align: "center",
+        verticalAlign: "middle",
+        style: { fontSize: "14px", color: "#888" },
+      },
+    };
 
-  if (barChart) barChart.destroy();
-  barChart = new ApexCharts(barEl, barOptions);
-  barChart.render();
+    if (barChart) barChart.destroy();
+    barChart = new ApexCharts(barEl, barOptions);
+    barChart.render();
 
-  if (seriesData.length === 0) {
-    barChart.updateSeries([]);
+    if (seriesData.length === 0) {
+      barChart.updateSeries([]);
+    }
   }
-}
 
   // === LINE CHART (dummy data dulu) ===
   const lineEl = document.querySelector("#lineChart");

@@ -277,7 +277,7 @@
           if (thn) filtered = filtered.filter(d => String(d.tahun) === String(thn));
 
           renderCharts(filtered);
-          updateKPI(filtered);
+          // updateKPI(filtered);
         }
         $("#filterKecamatan, #filterKomoditas, #filterTahun").on("change", applyFilters);
 
@@ -285,6 +285,7 @@
         let currentTableData = [...allData]; // default semua data
 
         function updateTable() {
+          currentPage = 1; // ✅ reset halaman tiap filter baru
           const kec = $("#tableFilterKecamatan").val();
           const kom = $("#tableFilterKomoditas").val();
           const thn = $("#tableFilterTahun").val();
@@ -301,7 +302,7 @@
         // ==== 7. Render awal ====
         renderMap();
         applyFilters(); // chart semua data
-        updateKPI(allData);
+        // updateKPI(allData);
         updateTable();  // table semua data
       }
     } catch (err) {
