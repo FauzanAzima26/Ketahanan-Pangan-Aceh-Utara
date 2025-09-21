@@ -9,6 +9,17 @@ const rowsPerPage = 20; // tampilkan 20 data per halaman
 let currentTableData = []; // global untuk tabel
 
 // ================================
+// HELPER: FORMAT ANGKA
+// ================================
+function formatNumber(num, decimals = 4) {
+  if (num == null || isNaN(num)) return "0";
+  return num.toLocaleString("id-ID", {
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
+  });
+}
+
+// ================================
 // HELPER: TRUNCATE ANGKA
 // ================================
 function truncate4(num) {
@@ -168,10 +179,12 @@ function renderCharts(dataJson) {
       labels,
       series,
       dataLabels: {
-        formatter: (val, opts) =>
-          truncate4(opts.w.config.series[opts.seriesIndex]),
+        enabled: true,
+        formatter: (val) => formatNumber(val, 4),
       },
-      tooltip: { y: { formatter: (val) => truncate4(val) } },
+      tooltip: {
+        y: { formatter: (val) => formatNumber(val, 4) },
+      },
       legend: { show: false },
       noData: { text: "Tidak ada data" },
     };
@@ -208,8 +221,13 @@ function renderCharts(dataJson) {
       },
       series: [{ name: "Luas Panen", data: seriesData }],
       xaxis: { categories },
-      dataLabels: { enabled: true, formatter: (val) => truncate4(val) },
-      tooltip: { y: { formatter: (val) => truncate4(val) } },
+      dataLabels: {
+        enabled: true,
+        formatter: (val) => formatNumber(val, 4),
+      },
+      tooltip: {
+        y: { formatter: (val) => formatNumber(val, 4) },
+      },
       colors: ["#1E88E5", "#FB8C00", "#8E24AA", "#43A047", "#F4511E"],
       legend: { show: false },
       noData: { text: "Tidak ada data" },
@@ -253,18 +271,18 @@ function renderCharts(dataJson) {
 // ================================
 function updateKPI(filtered) {
   const totalLuas = filtered.reduce((sum, d) => {
-    if (d.kecamatan === "Aceh Utara") return sum;
+    if (d.kecamatan === "Aceh Utara") return sum; // exclude Aceh Utara
     const { luas } = getLuasDanSatuan(d);
     return sum + luas;
   }, 0);
-  $("#totalLuas").text(truncate4(totalLuas));
+  $("#totalLuas").text(formatNumber(totalLuas, 4));
 
-  const hargaList = filtered.map((d) => d.harga).filter((h) => h > 0);
+  const hargaList = filtered.map((d) => d.harga).filter((h) => h && h > 0);
   const hargaRata =
     hargaList.length > 0
       ? hargaList.reduce((a, b) => a + b, 0) / hargaList.length
       : 0;
-  $("#hargaRata").text(truncate4(hargaRata));
+  $("#hargaRata").text(formatNumber(hargaRata, 2));
 
   const kecAgg = {};
   filtered.forEach((d) => {
