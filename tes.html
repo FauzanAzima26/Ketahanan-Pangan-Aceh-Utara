@@ -63,7 +63,13 @@
           if (res.ok) {
             const json = await res.json();
             const arr = Array.isArray(json) ? json : (json.dataKecamatan || []);
-            arr.forEach(d => { d.tahun = thn; });
+            arr.forEach(d => {
+              d.tahun = thn;
+              // 🔥 bersihkan kata 'Luas Panen' dari komoditas
+              if (d.komoditas) {
+                d.komoditas = d.komoditas.replace(/Luas Panen\s*/i, "").trim();
+              }
+            });
             allData.push(...arr);
           }
         } catch (e) {
@@ -271,6 +277,7 @@
           if (thn) filtered = filtered.filter(d => String(d.tahun) === String(thn));
 
           renderCharts(filtered);
+          updateKPI(filtered);
         }
         $("#filterKecamatan, #filterKomoditas, #filterTahun").on("change", applyFilters);
 
@@ -294,6 +301,7 @@
         // ==== 7. Render awal ====
         renderMap();
         applyFilters(); // chart semua data
+        updateKPI(allData);
         updateTable();  // table semua data
       }
     } catch (err) {
