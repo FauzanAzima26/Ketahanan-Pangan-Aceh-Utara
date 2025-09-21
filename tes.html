@@ -65,10 +65,26 @@
             const arr = Array.isArray(json) ? json : (json.dataKecamatan || []);
             arr.forEach(d => {
               d.tahun = thn;
-              // 🔥 bersihkan kata 'Luas Panen' dari komoditas
+
+              // 🔥 Bersihkan kata 'Luas Panen'
               if (d.komoditas) {
                 d.komoditas = d.komoditas.replace(/Luas Panen\s*/i, "").trim();
               }
+
+              // 🔍 Deteksi & normalisasi satuan
+              if (/\(.*hektar.*\)/i.test(d.komoditas)) {
+                d.satuan = "Ha";
+              } else if (/\(.*meter persegi.*\)/i.test(d.komoditas)) {
+                d.satuan = "m²";
+                // 👉 kalau mau semua seragam hektar:
+                // d.luas = d.luas / 10000;
+                // d.satuan = "Ha";
+              } else {
+                d.satuan = "";
+              }
+
+              // ✂️ Hapus teks satuan dari nama komoditas
+              d.komoditas = d.komoditas.replace(/\(.*\)/, "").trim();
             });
             allData.push(...arr);
           }
@@ -225,15 +241,14 @@
     <div class="table-responsive">
       <table class="table table-striped table-hover table-bordered mb-0" id="tabelPanen">
         <thead class="table-light">
-          <tr>
-            <th>No</th>
-            <th><strong>Kecamatan</strong></th>
-            <th><strong>Komoditas</strong></th>
-            <th><strong>Luas (Ha)</strong></th>
-            <th><strong>Produksi (Ton)</strong></th>
-            <th><strong>Harga (Rp/Kg)</strong></th>
-          </tr>
-        </thead>
+  <tr>
+    <th>No</th>
+    <th><strong>Kecamatan</strong></th>
+    <th><strong>Komoditas</strong></th>
+    <th><strong>Luas (Ha)</strong></th>
+    <th><strong>Tahun</strong></th>
+  </tr>
+</thead>
         <tbody></tbody>
       </table>
       <div id="pagination" class="mt-2"></div>
@@ -276,6 +291,7 @@
           if (kom) filtered = filtered.filter(d => d.komoditas === kom);
           if (thn) filtered = filtered.filter(d => String(d.tahun) === String(thn));
 
+          updateKPI(filtered);
           renderCharts(filtered);
           // updateKPI(filtered);
         }
