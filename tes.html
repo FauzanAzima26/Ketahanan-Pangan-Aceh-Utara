@@ -62,57 +62,72 @@
       const res2 = await fetch(urlBPS);
       const json2 = await res2.json();
 
-if (res2.ok && json2.data && json2.data[1]) {
-  const tabel = json2.data[1];
-  const rows = tabel.data;      // daftar kecamatan
-  const kolom = tabel.kolom;    // metadata variabel
+      if (res2.ok && json2.data && json2.data[1]) {
+        const tabel = json2.data[1];
+        const rows = tabel.data || [];      // daftar kecamatan
+        const kolom = tabel.kolom || {};    // metadata variabel
 
-  console.log("✅ API BPS berhasil, total kecamatan:", rows.length);
-  console.log("🔑 Daftar variabel:", Object.keys(kolom).length);
+        console.log("✅ API BPS berhasil, total kecamatan:", rows.length);
+        console.log("🔑 Daftar variabel:", Object.keys(kolom).length);
 
-  const dataBPS = [];
+        // === robust mapping BPS ===
+        const dataBPS = [];
 
-  rows.forEach(kec => {
-    const namaKec = kec.label || "-";
-    const vars = kec.variables || {};
+        rows.forEach(kec => {
+          const namaKec = (kec.label || "-").trim();
+          const vars = kec.variables || {};
 
-    // Loop setiap variabel yang ada di kolom
-    for (const kodeVar in vars) {
-      if (!kolom[kodeVar]) continue;
+          for (const kodeVar in vars) {
+            if (!kolom[kodeVar]) continue;
 
-      const meta = kolom[kodeVar];
-      const komoditas = meta.nama_variabel || "-";
-      const satuan = meta.satuan || "-";
-      const rawVal = vars[kodeVar];
+            const meta = kolom[kodeVar];
+            // normalisasi nama komoditas
+            let komoditasRaw = (meta.nama_variabel || "-").toString().trim();
+            let komoditas = komoditasRaw
+              .replace(/luas panen\s*/i, "")
+              .replace(/\(.*?\)/g, "")
+              .replace(/\bha\b/i, "")
+              .trim();
+            if (!komoditas) komoditas = komoditasRaw;
 
-      // nilai bisa null atau string
-      const luas = rawVal ? parseFloat(rawVal.toString().replace(",", ".")) : 0;
+            // ambil raw value
+            let rawVal = vars[kodeVar];
+            if (rawVal && typeof rawVal === "object") {
+              if (rawVal.value != null) rawVal = rawVal.value;
+              else if (rawVal.v != null) rawVal = rawVal.v;
+              else {
+                const keys = Object.keys(rawVal);
+                if (keys.length === 1 && (typeof rawVal[keys[0]] !== "object")) {
+                  rawVal = rawVal[keys[0]];
+                } else {
+                  const maybeNum = keys.map(k => rawVal[k]).find(x => x != null && x !== "");
+                  rawVal = maybeNum != null ? maybeNum : 0;
+                }
+              }
+            }
 
-      dataBPS.push({
-        kecamatan: namaKec,
-        komoditas: komoditas,
-        luas: luas,
-        tahun: tabel.tahun_data || "2024",
-        satuan: satuan,
-        sumber: "BPS"
-      });
-    }
-  });
+            // parsing ke float
+            const luas = rawVal === 0 || rawVal === "0" || rawVal === 0.0
+              ? 0
+              : (rawVal != null ? parseFloat(String(rawVal).replace(/,/g, ".")) || 0 : 0);
 
-  console.log("📊 Total baris hasil mapping BPS:", dataBPS.length);
-  allData = allData.concat(dataBPS);
-}
-      
-      if (res2.ok && json2.data) {
-        console.log("✅ API BPS berhasil:", json2.data.length);
-        const dataBPS = json2.data.map(r => ({
-          kecamatan: r.nama_kecamatan || "-",
-          komoditas: r.komoditas || "-",
-          luas: parseFloat((r.luas || "0").toString().replace(",", ".")),
-          tahun: r.tahun || "2024",
-          satuan: r.satuan || "Ha",
-          sumber: "BPS"
-        }));
+            dataBPS.push({
+              kecamatan: namaKec,
+              komoditas: komoditas,
+              luas: luas,
+              tahun: tabel.tahun_data || "2024",
+              satuan: meta.satuan || "-",
+              sumber: "BPS"
+            });
+          }
+        });
+
+        console.log("📊 Total baris hasil mapping BPS:", dataBPS.length);
+        console.groupCollapsed("DEBUG sample mapped BPS");
+        console.table(dataBPS.slice(0, 30));
+        console.log("BPS rows with luas>0:", dataBPS.filter(r => r.luas > 0).length);
+        console.groupEnd();
+
         allData = allData.concat(dataBPS);
       }
 
@@ -295,3 +310,4 @@ if (res2.ok && json2.data && json2.data[1]) {
     }
   });
 </script>
+
