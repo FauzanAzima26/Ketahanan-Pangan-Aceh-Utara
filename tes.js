@@ -3,34 +3,26 @@
 // ================================
 let pieChart = null;
 let barChart = null;
+let sayurBuahChart = null;
 let lineChart = null;
 let currentPage = 1;
 const rowsPerPage = 20;
-let currentTableData = []; // global untuk tabel
+let currentTableData = [];
 
 // ================================
-// HELPER: FORMAT ANGKA
+// HELPER: FORMAT & PARSE
 // ================================
-function formatNumber(num, decimals = 4) {
-  if (num == null || isNaN(num)) return "0";
-  const fixed = num.toFixed(decimals);
-  if (Number(fixed) % 1 === 0) {
-    return Number(fixed).toLocaleString("id-ID", {
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    });
-  }
-  return Number(fixed).toLocaleString("id-ID", {
+function truncate4(num) {
+  if (num == null || isNaN(num)) return 0;
+  return Number(num.toFixed(4));
+}
+function formatNumber(num, decimals = 2) {
+  if (num == null || isNaN(num)) return "0,00";
+  return Number(num).toLocaleString("id-ID", {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });
 }
-
-function truncate4(num) {
-  if (!num || isNaN(num)) return 0;
-  return Number(num.toFixed(4));
-}
-
 function parseNumber(val) {
   if (val == null) return 0;
   let str = String(val).trim();
@@ -45,145 +37,205 @@ function parseNumber(val) {
   }
   return parseFloat(str.replace(/\./g, "")) || 0;
 }
-
-function getLuasParsed(item) {
-  return parseNumber(item.luas);
-}
-
-// ================================
-// TABLE
-// ================================
-function renderTable(data) {
-  const tbody = document.querySelector("#tableDashboard tbody");
-  if (!tbody) return;
-  currentTableData = data;
-  const start = (currentPage - 1) * rowsPerPage;
-  const end = start + rowsPerPage;
-  const pageData = data.slice(start, end);
-  tbody.innerHTML = "";
-  pageData.forEach((d, i) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${start + i + 1}</td>
-      <td>${d.kecamatan}</td>
-      <td>${d.komoditas}</td>
-      <td>${formatNumber(getLuasParsed(d), 2)}</td>
-      <td>${d.tahun}</td>`;
-    tbody.appendChild(tr);
-  });
-  renderPagination(data.length);
-  console.log("✅ renderTable(): tampil", pageData.length, "baris dari total", data.length);
-}
-
-function renderPagination(totalRows) {
-  const container = document.getElementById("pagination");
-  if (!container) return;
-  container.innerHTML = "";
-  const totalPages = Math.ceil(totalRows / rowsPerPage);
-  if (totalPages <= 1) return;
-  const wrapper = document.createElement("div");
-  wrapper.className = "pagination";
-  const prev = document.createElement("button");
-  prev.textContent = "«";
-  prev.disabled = currentPage === 1;
-  prev.addEventListener("click", () => {
-    if (currentPage > 1) {
-      currentPage--;
-      renderTable(currentTableData);
-    }
-  });
-  wrapper.appendChild(prev);
-  const maxVisible = 2;
-  for (let i = 1; i <= totalPages; i++) {
-    if (i === 1 || i === totalPages || (i >= currentPage - maxVisible && i <= currentPage + maxVisible)) {
-      const btn = document.createElement("button");
-      btn.textContent = i;
-      btn.className = i === currentPage ? "active" : "";
-      btn.addEventListener("click", () => {
-        currentPage = i;
-        renderTable(currentTableData);
-      });
-      wrapper.appendChild(btn);
-    } else if (i === currentPage - (maxVisible + 1) || i === currentPage + (maxVisible + 1)) {
-      const dots = document.createElement("span");
-      dots.textContent = "...";
-      dots.style.padding = "6px 10px";
-      wrapper.appendChild(dots);
-    }
+function normalizeLuas(item, forChart = false) {
+  let val = parseNumber(item.value ?? item.value_raw ?? item.luas);
+  const satuan = (item.satuan || "").toLowerCase();
+  if ((!forChart && satuan.includes("m<sup>2")) || satuan.includes("m2")) {
+    val = val / 10000; // ubah m2 ke Ha
   }
-  const next = document.createElement("button");
-  next.textContent = "»";
-  next.disabled = currentPage === totalPages;
-  next.addEventListener("click", () => {
-    if (currentPage < totalPages) {
-      currentPage++;
-      renderTable(currentTableData);
-    }
-  });
-  wrapper.appendChild(next);
-  container.appendChild(wrapper);
+  return val || 0;
 }
 
 // ================================
-// CHARTS
+// KLASIFIKASI KOMODITAS
+// ================================
+function classifyKategori(komoditas) {
+  const nama = (komoditas || "").toLowerCase();
+
+  // tanaman pokok
+  if (["padi", "jagung", "kedelai"].some((k) => nama.includes(k))) {
+    return "Pokok";
+  }
+  // sayuran
+  if (
+    [
+      "cabai",
+      "cabe",
+      "rawit",
+      "bawang",
+      "sawi",
+      "kangkung",
+      "bayam",
+      "tomat",
+      "terong",
+      "kubis",
+      "kol",
+      "wortel",
+      "kacang panjang",
+      "petsai",
+      "seledri",
+      "buncis",
+    ].some((k) => nama.includes(k))
+  ) {
+    return "Sayuran";
+  }
+  // buah
+  if (
+    [
+      "mangga",
+      "pisang",
+      "durian",
+      "pepaya",
+      "jeruk",
+      "rambutan",
+      "nanas",
+      "semangka",
+      "melon",
+      "sirsak",
+      "salak",
+      "jambu",
+      "apel",
+      "alpukat",
+    ].some((k) => nama.includes(k))
+  ) {
+    return "Buah";
+  }
+  return "Lainnya";
+}
+
+// ================================
+// TREEMAP: SAYUR & BUAH
+// ================================
+function renderSayurBuahChart(filtered) {
+  const el = document.querySelector("#sayurBuahChart");
+  if (!el) return;
+
+  const fokus = filtered.filter(
+    (item) => item.kategori === "Sayuran" || item.kategori === "Buah"
+  );
+
+  console.group("Treemap Debug");
+  console.log("Total data:", filtered.length);
+  console.log("Sayur & Buah:", fokus.length);
+  console.table(fokus.slice(0, 20));
+  console.groupEnd();
+
+  const agg = {};
+  fokus.forEach((item) => {
+    const luas = normalizeLuas(item);
+    if (luas <= 0) return;
+    agg[item.komoditas] = (agg[item.komoditas] || 0) + luas;
+  });
+
+  const series = Object.entries(agg).map(([komoditas, luas]) => ({
+    x: komoditas,
+    y: truncate4(luas),
+  }));
+
+  if (sayurBuahChart) sayurBuahChart.destroy();
+  sayurBuahChart = new ApexCharts(el, {
+    chart: { type: "treemap", height: 400 },
+    series: [{ data: series }],
+    tooltip: { y: { formatter: (val) => `${formatNumber(val, 2)} Ha` } },
+    noData: { text: "Tidak ada data" },
+  });
+  sayurBuahChart.render();
+}
+
+// ================================
+// CHART: PIE & BAR
 // ================================
 function renderCharts(dataJson) {
   if (!dataJson) return;
-  console.group("renderCharts Debug");
-  console.log("Data diterima:", dataJson.length);
-  console.table(dataJson.slice(0, 20));
-  console.groupEnd();
+  const filteredData = dataJson.filter((d) => d.kecamatan !== "Aceh Utara");
 
-  const selectedKec = document.querySelector("#filterKecamatan")?.value || "";
-  let filteredData = selectedKec ? dataJson.filter(d => d.kecamatan === selectedKec && d.kecamatan !== "Aceh Utara") : [...dataJson];
-
-  // PIE
+  // PIE → tanaman pokok
   const pieEl = document.querySelector("#pieChart");
   if (pieEl) {
     const agg = {};
-    filteredData.forEach(item => {
-      if (item.kecamatan === "Aceh Utara") return;
-      const luas = getLuasParsed(item);
-      if (luas <= 0) return;
-      agg[item.komoditas || "Lainnya"] = (agg[item.komoditas || "Lainnya"] || 0) + luas;
-    });
+    filteredData
+      .filter((item) => item.kategori === "Pokok")
+      .forEach((item) => {
+        const luas = normalizeLuas(item);
+        if (luas <= 0) return;
+        agg[item.komoditas] = (agg[item.komoditas] || 0) + luas;
+      });
+
     const labels = Object.keys(agg);
-    const series = Object.values(agg).map(v => truncate4(v));
+    const series = Object.values(agg).map((v) => truncate4(v));
+
     if (pieChart) pieChart.destroy();
     pieChart = new ApexCharts(pieEl, {
-      chart: { type: "donut", height: 400 },
+      chart: { type: "donut", height: 400, toolbar: { show: false } },
       labels,
       series,
-      dataLabels: { enabled: true, formatter: (val, opts) => formatNumber(opts.w.config.series[opts.seriesIndex], 2) },
-      tooltip: { y: { formatter: val => formatNumber(val, 2) } },
-      legend: { show: true },
+      plotOptions: {
+        pie: {
+          donut: {
+            size: "65%",
+            labels: {
+              show: true,
+              total: {
+                show: true,
+                label: "Total",
+                formatter: (w) => {
+                  const total = w.globals.seriesTotals.reduce(
+                    (a, b) => a + b,
+                    0
+                  );
+                  return `${formatNumber(total, 2)} Ha`;
+                },
+              },
+            },
+          },
+        },
+      },
+      tooltip: {
+        y: {
+          formatter: (val, opts) => {
+            const total = opts.w.globals.seriesTotals.reduce(
+              (a, b) => a + b,
+              0
+            );
+            const pct = total > 0 ? (val / total) * 100 : 0;
+            return `${formatNumber(val, 2)} Ha (${pct.toFixed(2)}%)`;
+          },
+        },
+      },
+      legend: { show: true, position: "bottom" },
       noData: { text: "Tidak ada data" },
     });
     pieChart.render();
   }
 
-  // BAR
+  // BAR → top 10 kecamatan
   const barEl = document.querySelector("#horizontalBarChart");
   if (barEl) {
     const agg = {};
-    dataJson.forEach(d => {
-      if (d.kecamatan === "Aceh Utara" || d.luas == null) return;
-      const luas = getLuasParsed(d);
-      agg[d.kecamatan] = (agg[d.kecamatan] || 0) + luas;
+    filteredData.forEach((item) => {
+      const luas = normalizeLuas(item);
+      agg[item.kecamatan] = (agg[item.kecamatan] || 0) + luas;
     });
-    let arr = Object.entries(agg).map(([kec, luas]) => ({ kec, luas: truncate4(luas) }));
+
+    let arr = Object.entries(agg).map(([kec, luas]) => ({
+      kec,
+      luas: truncate4(luas),
+    }));
     arr.sort((a, b) => b.luas - a.luas);
     arr = arr.slice(0, 10);
+
     if (barChart) barChart.destroy();
     barChart = new ApexCharts(barEl, {
       chart: { type: "bar", height: 400 },
-      plotOptions: { bar: { horizontal: true, distributed: true, borderRadius: 4 } },
-      series: [{ name: "Luas Panen", data: arr.map(d => d.luas) }],
-      xaxis: { categories: arr.map(d => d.kec) },
-      dataLabels: { enabled: true, formatter: val => formatNumber(val, 2) },
-      tooltip: { y: { formatter: val => formatNumber(val, 2) } },
-      colors: ["#1E88E5", "#FB8C00", "#8E24AA", "#43A047", "#F4511E"],
-      legend: { show: false },
+      plotOptions: {
+        bar: { horizontal: true, distributed: true, borderRadius: 4 },
+      },
+      series: [{ name: "Luas Panen", data: arr.map((d) => d.luas) }],
+      xaxis: {
+        categories: arr.map((d) => d.kec),
+        title: { text: "Luas Panen (Ha)" },
+      },
+      dataLabels: { enabled: true, formatter: (val) => formatNumber(val, 2) },
       noData: { text: "Tidak ada data" },
     });
     barChart.render();
@@ -194,59 +246,94 @@ function renderCharts(dataJson) {
 // KPI
 // ================================
 function updateKPI(filtered, allData) {
-  const sourceData = filtered.length ? filtered : allData;
-  const debugRows = sourceData.map((d, i) => ({ idx: i, kec: d.kecamatan, kom: d.komoditas, raw: d.luas, parsed: getLuasParsed(d) }));
-  const totalLuas = debugRows.reduce((s, r) => s + (r.parsed || 0), 0);
+  const sourceData = (filtered.length ? filtered : allData).filter(
+    (d) => d.kecamatan !== "Aceh Utara"
+  );
+
+  const totalLuas = sourceData.reduce(
+    (s, r) => s + truncate4(normalizeLuas(r)),
+    0
+  );
   $("#totalLuas").text(formatNumber(totalLuas, 2));
-  console.group("KPI Debug");
-  console.log("rows:", sourceData.length);
-  console.log("parsed>0:", debugRows.filter(r => r.parsed > 0).length);
-  console.log("totalLuas:", totalLuas);
-  console.table(debugRows.slice(0, 30));
-  console.groupEnd();
+
+  const kecAgg = {};
+  sourceData.forEach((r) => {
+    kecAgg[r.kecamatan] = (kecAgg[r.kecamatan] || 0) + normalizeLuas(r);
+  });
+  const kecTerluas = Object.entries(kecAgg).sort((a, b) => b[1] - a[1])[0];
+  $("#kecTerluas").text(
+    kecTerluas ? `${kecTerluas[0]} (${formatNumber(kecTerluas[1], 2)} Ha)` : "-"
+  );
+
+  const komAgg = {};
+  sourceData.forEach((r) => {
+    komAgg[r.komoditas] = (komAgg[r.komoditas] || 0) + normalizeLuas(r);
+  });
+  const komTerluas = Object.entries(komAgg).sort((a, b) => b[1] - a[1])[0];
+  $("#komTerluas").text(
+    komTerluas ? `${komTerluas[0]} (${formatNumber(komTerluas[1], 2)} Ha)` : "-"
+  );
 }
 
 // ================================
-// INIT
+// INIT DASHBOARD
 // ================================
-window.initDashboard = function(allData) {
+window.initDashboard = function (allData) {
   console.log("🔥 initDashboard():", allData.length, "records");
-  console.table(allData.slice(0, 30));
-  if (!allData.length) return;
 
-  const fillSelect = (id, values) => {
+  // isi kategori untuk semua data
+  allData.forEach((d) => {
+    d.kategori = classifyKategori(d.komoditas);
+  });
+
+  // isi dropdown
+  function fillSelect(id, values) {
     const el = document.querySelector(id);
     if (!el) return;
     values = Array.from(values).sort();
-    values.forEach(v => {
+    values.forEach((v) => {
       const opt = document.createElement("option");
       opt.value = String(v);
       opt.textContent = v;
       el.appendChild(opt);
     });
-  };
-  fillSelect("#filterKecamatan", new Set(allData.map(d => d.kecamatan).filter(k => k && k !== "Aceh Utara")));
-  fillSelect("#filterKomoditas", new Set(allData.map(d => d.komoditas).filter(k => k)));
-  fillSelect("#filterTahun", new Set(allData.map(d => d.tahun).filter(t => t)));
+  }
+  fillSelect(
+    "#filterKecamatan",
+    new Set(
+      allData.map((d) => d.kecamatan).filter((k) => k && k !== "Aceh Utara")
+    )
+  );
+  fillSelect(
+    "#filterKomoditas",
+    new Set(allData.map((d) => d.komoditas).filter((k) => k))
+  );
+  fillSelect(
+    "#filterTahun",
+    new Set(allData.map((d) => d.tahun).filter((t) => t))
+  );
 
   function applyFilters() {
     const kec = document.querySelector("#filterKecamatan")?.value || "";
     const kom = document.querySelector("#filterKomoditas")?.value || "";
     const thn = document.querySelector("#filterTahun")?.value || "";
-    const filtered = allData.filter(d => (!kec || d.kecamatan === kec) && (!kom || d.komoditas === kom) && (!thn || String(d.tahun) === String(thn)));
-    console.group("applyFilters Debug");
-    console.log("Filter:", { kec, kom, thn });
-    console.log("Filtered records:", filtered.length);
-    console.table(filtered.slice(0, 30));
-    console.groupEnd();
+
+    const filtered = allData.filter(
+      (d) =>
+        (!kec || d.kecamatan === kec) &&
+        (!kom || d.komoditas === kom) &&
+        (!thn || String(d.tahun) === String(thn))
+    );
+
     updateKPI(filtered, allData);
     renderCharts(filtered);
-    renderTable(filtered);
-    renderMap();
+    renderSayurBuahChart(filtered);
+    renderMap && renderMap(); // opsional
   }
 
-  ["#filterKecamatan", "#filterKomoditas", "#filterTahun"].forEach(sel => {
+  ["#filterKecamatan", "#filterKomoditas", "#filterTahun"].forEach((sel) => {
     document.querySelector(sel)?.addEventListener("change", applyFilters);
   });
+
   applyFilters();
 };
