@@ -9,11 +9,18 @@ const rowsPerPage = 20; // tampilkan 20 data per halaman
 let currentTableData = []; // global untuk tabel
 
 // ================================
-// HELPER: FORMAT ANGKA
+// HELPER: FORMAT ANGKA (SMART VERSION)
 // ================================
 function formatNumber(num, decimals = 4) {
   if (num == null || isNaN(num)) return "0";
-  return num.toLocaleString("id-ID", {
+  const fixed = num.toFixed(decimals);
+  if (Number(fixed) % 1 === 0) {
+    return Number(fixed).toLocaleString("id-ID", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+  }
+  return Number(fixed).toLocaleString("id-ID", {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
   });
@@ -41,44 +48,26 @@ function getLuasDanSatuan(item) {
 // RENDER TABLE
 // ================================
 function renderTable(data) {
-  const tbody = document.querySelector("#tabelPanen tbody");
-  if (!tbody) return;
-
+  const tbody = document.querySelector("#tableDashboard tbody");
+  if (!tbody) {
+    console.warn("⚠️ Tidak menemukan #tableDashboard tbody");
+    return;
+  }
   tbody.innerHTML = "";
-  if (!data || data.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center">Tidak ada data</td></tr>`;
-    return;
-  }
 
-  let filteredData = data.filter((d) => d.kecamatan !== "Aceh Utara");
-
-  if (filteredData.length === 0) {
-    tbody.innerHTML = `<tr><td colspan="6" class="text-center">Tidak ada data per-kecamatan</td></tr>`;
-    return;
-  }
-
-  currentTableData = filteredData;
-  currentTableData.sort((a, b) => a.kecamatan.localeCompare(b.kecamatan));
-
-  const start = (currentPage - 1) * rowsPerPage;
-  const end = start + rowsPerPage;
-  const pageData = currentTableData.slice(start, end);
-
-  pageData.forEach((d, i) => {
-    const { luas, satuan } = getLuasDanSatuan(d);
-    const row = `
-    <tr>
-      <td>${start + i + 1}</td>
+  data.forEach((d, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${i + 1}</td>
       <td>${d.kecamatan}</td>
       <td>${d.komoditas}</td>
-      <td>${truncate4(luas)} ${satuan}</td>
-      <td>${d.tahun || "-"}</td>
-    </tr>
-  `;
-    tbody.insertAdjacentHTML("beforeend", row);
+      <td>${d.luas}</td>
+      <td>${d.tahun}</td>
+    `;
+    tbody.appendChild(tr);
   });
 
-  renderPagination(currentTableData.length);
+  console.log("✅ renderTable(): isi", data.length, "baris");
 }
 
 // ================================
@@ -165,7 +154,7 @@ function renderCharts(dataJson) {
     const agg = {};
     filteredData.forEach((item) => {
       if (item.kecamatan === "Aceh Utara") return;
-      const { luas } = getLuasDanSatuan(item);
+      const luas = getLuasParsed(item); // ✅ pakai parser baru
       if (luas <= 0) return;
       agg[item.komoditas || "Lainnya"] =
         (agg[item.komoditas || "Lainnya"] || 0) + luas;
@@ -180,12 +169,15 @@ function renderCharts(dataJson) {
       series,
       dataLabels: {
         enabled: true,
-        formatter: (val) => formatNumber(val, 4),
+        formatter: (val, opts) => {
+          const realVal = opts.w.config.series[opts.seriesIndex];
+          return formatNumber(realVal, 2); // ✅ tampilkan angka asli, bukan persen
+        },
       },
       tooltip: {
-        y: { formatter: (val) => formatNumber(val, 4) },
+        y: { formatter: (val) => formatNumber(val, 2) },
       },
-      legend: { show: false },
+      legend: { show: true },
       noData: { text: "Tidak ada data" },
     };
 
@@ -200,7 +192,7 @@ function renderCharts(dataJson) {
     const agg = {};
     dataJson.forEach((d) => {
       if (d.kecamatan === "Aceh Utara" || d.luas == null) return;
-      const { luas } = getLuasDanSatuan(d);
+      const luas = getLuasParsed(d); // ✅ pakai parser baru
       agg[d.kecamatan] = (agg[d.kecamatan] || 0) + luas;
     });
 
@@ -223,10 +215,10 @@ function renderCharts(dataJson) {
       xaxis: { categories },
       dataLabels: {
         enabled: true,
-        formatter: (val) => formatNumber(val, 4),
+        formatter: (val) => formatNumber(val, 2), // ✅ tampilkan ribuan benar
       },
       tooltip: {
-        y: { formatter: (val) => formatNumber(val, 4) },
+        y: { formatter: (val) => formatNumber(val, 2) },
       },
       colors: ["#1E88E5", "#FB8C00", "#8E24AA", "#43A047", "#F4511E"],
       legend: { show: false },
@@ -267,38 +259,181 @@ function renderCharts(dataJson) {
 }
 
 // ================================
-// UPDATE KPI
+// PARSER ANGKA (AMAN UNTUK FORMAT ID)
 // ================================
-function updateKPI(filtered) {
-  const totalLuas = filtered.reduce((sum, d) => {
-    if (d.kecamatan === "Aceh Utara") return sum; // exclude Aceh Utara
-    const { luas } = getLuasDanSatuan(d);
-    return sum + luas;
-  }, 0);
-  $("#totalLuas").text(formatNumber(totalLuas, 4));
+function parseNumber(val) {
+  if (val == null) return 0;
+  let str = String(val).trim();
 
-  const hargaList = filtered.map((d) => d.harga).filter((h) => h && h > 0);
-  const hargaRata =
-    hargaList.length > 0
-      ? hargaList.reduce((a, b) => a + b, 0) / hargaList.length
-      : 0;
+  // jika kosong atau "-"
+  if (str === "" || str === "-") return 0;
+
+  // normalisasi koma jadi titik
+  str = str.replace(/,/g, ".");
+
+  const dotCount = (str.match(/\./g) || []).length;
+
+  if (dotCount === 0) {
+    return parseFloat(str) || 0;
+  }
+
+  if (dotCount === 1) {
+    const [intPart, fracPart = ""] = str.split(".");
+    if (fracPart.length === 3) {
+      // satu titik + 3 digit di belakang => ribuan
+      return parseFloat(intPart + fracPart) || 0;
+    } else {
+      // 1-2 digit => desimal
+      return parseFloat(str) || 0;
+    }
+  }
+
+  // dotCount > 1 => buang semua titik (anggap semua sebagai pemisah ribuan)
+  return parseFloat(str.replace(/\./g, "")) || 0;
+}
+
+function getLuasParsed(item) {
+  return parseNumber(item.luas);
+}
+
+function updateKPI(filtered, allData) {
+  const sourceData = filtered && filtered.length ? filtered : allData || [];
+  const activeKom = document.querySelector("#filterKomoditas")?.value || ""; // "" => semua
+  const onlyKom = activeKom && activeKom.trim() !== "";
+
+  // ambil baris yang relevant (exclude Aceh Utara)
+  const rows = sourceData.filter(
+    (d) =>
+      d &&
+      d.kecamatan !== "Aceh Utara" &&
+      (!onlyKom || d.komoditas === activeKom)
+  );
+
+  // parse tiap row dan kumpulkan debug info
+  const debugRows = rows.map((d, i) => {
+    const parsed = getLuasParsed(d);
+    return {
+      idx: i,
+      kecamatan: d.kecamatan,
+      komoditas: d.komoditas,
+      raw: d.luas,
+      parsed: parsed,
+    };
+  });
+
+  // hitung total
+  const totalLuas = debugRows.reduce((s, r) => s + (Number(r.parsed) || 0), 0);
+
+  // tampilkan KPI
+  $("#totalLuas").text(formatNumber(totalLuas, 2)); // 2 decimal supaya sesuai Excel jika ada koma
+
+  // rata2 harga (sesuaikan apakah ingin per komoditas atau semua)
+  const hargaList = rows
+    .map((d) => Number(d.harga))
+    .filter((h) => !isNaN(h) && h > 0);
+  const hargaRata = hargaList.length
+    ? hargaList.reduce((a, b) => a + b, 0) / hargaList.length
+    : 0;
   $("#hargaRata").text(formatNumber(hargaRata, 2));
 
+  // kecamatan terluas (untuk komoditas aktif atau semua)
   const kecAgg = {};
-  filtered.forEach((d) => {
-    if (d.kecamatan === "Aceh Utara") return;
-    const { luas } = getLuasDanSatuan(d);
-    kecAgg[d.kecamatan] = (kecAgg[d.kecamatan] || 0) + luas;
+  debugRows.forEach((r) => {
+    kecAgg[r.kecamatan] = (kecAgg[r.kecamatan] || 0) + (Number(r.parsed) || 0);
   });
   const kecTerluas = Object.entries(kecAgg).sort((a, b) => b[1] - a[1])[0];
   $("#kecTerluas").text(kecTerluas ? kecTerluas[0] : "-");
 
+  // komoditas terluas (info umum)
   const komAgg = {};
-  filtered.forEach((d) => {
+  sourceData.forEach((d) => {
     if (d.kecamatan === "Aceh Utara") return;
-    const { luas } = getLuasDanSatuan(d);
-    komAgg[d.komoditas] = (komAgg[d.komoditas] || 0) + luas;
+    const p = getLuasParsed(d);
+    komAgg[d.komoditas] = (komAgg[d.komoditas] || 0) + p;
   });
   const komTerluas = Object.entries(komAgg).sort((a, b) => b[1] - a[1])[0];
   $("#komTerluas").text(komTerluas ? komTerluas[0] : "-");
+
+  // DEBUG: tampilkan ringkasan di console (baris teratas + statistik)
+  console.group("KPI Debug");
+  console.log("rows considered:", rows.length);
+  console.log(
+    "rows with parsed>0:",
+    debugRows.filter((r) => r.parsed > 0).length
+  );
+  console.log("totalLuas (parsed) =", totalLuas);
+  console.table(debugRows.slice(0, 50)); // tampilkan 50 baris pertama untuk cek
+  console.groupEnd();
 }
+
+// ================================
+// INIT DASHBOARD (ENTRY POINT)
+// ================================
+window.initDashboard = function (allData) {
+  console.log("🔥 initDashboard() dengan data:", allData.length, "records");
+  if (!allData || !allData.length) {
+    console.warn("⚠️ Tidak ada data, dashboard tidak bisa render");
+    return;
+  }
+
+  // isi filter dropdown
+  const kecSet = new Set(
+    allData.map((d) => d.kecamatan).filter((k) => k && k !== "Aceh Utara")
+  );
+  const komSet = new Set(allData.map((d) => d.komoditas).filter((k) => k));
+  const tahunSet = new Set(allData.map((d) => d.tahun).filter((t) => t));
+
+  const fillSelect = (id, values) => {
+    const el = document.querySelector(id);
+    if (!el) return;
+    values = Array.from(values).sort();
+    values.forEach((v) => {
+      const opt = document.createElement("option");
+      opt.value = String(v);
+      opt.textContent = v;
+      el.appendChild(opt);
+    });
+  };
+  fillSelect("#filterKecamatan", kecSet);
+  fillSelect("#filterKomoditas", komSet);
+  fillSelect("#filterTahun", tahunSet);
+  fillSelect("#tableFilterKecamatan", kecSet);
+  fillSelect("#tableFilterKomoditas", komSet);
+  fillSelect("#tableFilterTahun", tahunSet);
+
+  // fungsi filter + render
+  function applyFilters() {
+    const kec = document.querySelector("#filterKecamatan")?.value || "";
+    const kom = document.querySelector("#filterKomoditas")?.value || "";
+    const thn = document.querySelector("#filterTahun")?.value || "";
+
+    let filtered = allData.filter(
+      (d) =>
+        (!kec || d.kecamatan === kec) &&
+        (!kom || d.komoditas === kom) &&
+        (!thn || String(d.tahun) === String(thn))
+    );
+
+    console.log("📊 applyFilters():", filtered.length, "records");
+
+    updateKPI(filtered, allData); // << kirim dua data
+    renderCharts(filtered);
+    renderTable(filtered);
+    renderMap();
+  }
+
+  // bind event
+  [
+    "#filterKecamatan",
+    "#filterKomoditas",
+    "#filterTahun",
+    "#tableFilterKecamatan",
+    "#tableFilterKomoditas",
+    "#tableFilterTahun",
+  ].forEach((sel) => {
+    document.querySelector(sel)?.addEventListener("change", applyFilters);
+  });
+
+  // render pertama kali
+  applyFilters();
+};

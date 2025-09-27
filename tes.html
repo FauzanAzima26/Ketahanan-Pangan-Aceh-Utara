@@ -3,10 +3,8 @@
 <main role="main">
   <div class="container mt-2 mt-md-0">
     <div class="row">
-      <!-- Konten utama -->
       <div class="col-md-12 content-area">
 
-        <!-- Breadcrumb -->
         <nav aria-label="breadcrumb" class="mb-3">
           <ol class="breadcrumb bg-light p-2 rounded small mb-0"></ol>
         </nav>
@@ -14,16 +12,10 @@
         <div class="single-berita">
           <div class="card" style="width: 100%; display: none;">
             <div class="card-header">
-              <div class="gambar-caption"></div>
               <h1 class="card-title judul-berita">Title</h1>
               <div class="share-link mt-2">bagikan:</div>
             </div>
             <div class="card-body isi-berita"></div>
-            <div class="meta-tags" style="font-size: 10pt;">
-              <span class="font-weight-600"><i class="fas fa-tags"></i></span>
-              <span class="tags tags-berita"></span>
-            </div>
-            <div id="komentar"></div>
           </div>
         </div>
 
@@ -36,83 +28,107 @@
 
 <script type="text/javascript">
   CMS.Loaded(async function () {
-    setIcon(CMS_Setting('icon'));
-
     function sosmed(judul) {
       const url = window.location.href;
       return `
-      <a href="//www.facebook.com/share.php?u=${url}" target="_blank">
-        <img src="/themes/_ceudah-copy/assets/images/facebook.png" width="24" height="24" />
-      </a>
-      <a href="//twitter.com/intent/tweet?url=${url}&text=${judul}" target="_blank">
-        <img src="/themes/_ceudah-copy/assets/images/twitter.png" width="24" height="24" />
-      </a>
-      <a href="whatsapp://send?text=${judul} ${url}" target="_blank">
-        <img src="/themes/_ceudah-copy/assets/images/whatsapp.png" width="24" height="24" />
-      </a>`;
+        <a href="//www.facebook.com/share.php?u=${url}" target="_blank"><img src="/themes/_ceudah-copy/assets/images/facebook.png" width="24"/></a>
+        <a href="//twitter.com/intent/tweet?url=${url}&text=${judul}" target="_blank"><img src="/themes/_ceudah-copy/assets/images/twitter.png" width="24"/></a>
+        <a href="whatsapp://send?text=${judul} ${url}" target="_blank"><img src="/themes/_ceudah-copy/assets/images/whatsapp.png" width="24"/></a>`;
     }
 
     try {
-      // ==== 1. Load semua file JSON multi-tahun ====
-      const tahunList = [2020, 2021, 2022, 2023, 2024, 2025];
       let allData = [];
 
-      for (const thn of tahunList) {
-        try {
-          const res = await fetch(`/themes/_ceudah-copy/assets/json/luas-panen-aceh-utara-${thn}.json?v=${Date.now()}`);
-          if (res.ok) {
-            const json = await res.json();
-            const arr = Array.isArray(json) ? json : (json.dataKecamatan || []);
-            arr.forEach(d => {
-              d.tahun = thn;
+      // === 1. Ambil data dari API Satu Data Aceh Utara ===
+      const urlSatuData = "https://satudata.acehutara.go.id/api/3/action/datastore_search?resource_id=559e8bea-c48b-4bda-adbf-5fc146c160ec&limit=500";
+      const res1 = await fetch(urlSatuData);
+      const json1 = await res1.json();
 
-              // 🔥 Bersihkan kata 'Luas Panen'
-              if (d.komoditas) {
-                d.komoditas = d.komoditas.replace(/Luas Panen\s*/i, "").trim();
-              }
-
-              // 🔍 Deteksi & normalisasi satuan
-              if (/\(.*hektar.*\)/i.test(d.komoditas)) {
-                d.satuan = "Ha";
-              } else if (/\(.*meter persegi.*\)/i.test(d.komoditas)) {
-                d.satuan = "m²";
-                // 👉 kalau mau semua seragam hektar:
-                // d.luas = d.luas / 10000;
-                // d.satuan = "Ha";
-              } else {
-                d.satuan = "";
-              }
-
-              // ✂️ Hapus teks satuan dari nama komoditas
-              d.komoditas = d.komoditas.replace(/\(.*\)/, "").trim();
-            });
-            allData.push(...arr);
-          }
-        } catch (e) {
-          console.warn("File tidak ada:", thn, e);
-        }
+      if (res1.ok && json1.success) {
+        console.log("✅ API Satu Data berhasil:", json1.result.records.length);
+        const dataSatuData = json1.result.records.map(r => ({
+          kecamatan: r.kemendagri_nama_kecamatan || "-",
+          komoditas: r.komotditi || "-",
+          luas: parseFloat((r.luas_panen || "0").toString().replace(",", ".")),
+          tahun: r.tahun || "2023",
+          satuan: "Ha",
+          sumber: "Satu Data"
+        }));
+        allData = allData.concat(dataSatuData);
       }
 
-      if (allData.length === 0) {
-        allData = [
-          { kecamatan: "Lhoksukon", komoditas: "Padi", luas: 1200, produksi: 3500, harga: 5200, tahun: 2020 },
-          { kecamatan: "Samudera", komoditas: "Jagung", luas: 800, produksi: 2100, harga: 4800, tahun: 2020 }
-        ];
+      // === 2. Ambil data dari API BPS ===
+      const urlBPS = "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2024/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f";
+      const res2 = await fetch(urlBPS);
+      const json2 = await res2.json();
+
+if (res2.ok && json2.data && json2.data[1]) {
+  const tabel = json2.data[1];
+  const rows = tabel.data;      // daftar kecamatan
+  const kolom = tabel.kolom;    // metadata variabel
+
+  console.log("✅ API BPS berhasil, total kecamatan:", rows.length);
+  console.log("🔑 Daftar variabel:", Object.keys(kolom).length);
+
+  const dataBPS = [];
+
+  rows.forEach(kec => {
+    const namaKec = kec.label || "-";
+    const vars = kec.variables || {};
+
+    // Loop setiap variabel yang ada di kolom
+    for (const kodeVar in vars) {
+      if (!kolom[kodeVar]) continue;
+
+      const meta = kolom[kodeVar];
+      const komoditas = meta.nama_variabel || "-";
+      const satuan = meta.satuan || "-";
+      const rawVal = vars[kodeVar];
+
+      // nilai bisa null atau string
+      const luas = rawVal ? parseFloat(rawVal.toString().replace(",", ".")) : 0;
+
+      dataBPS.push({
+        kecamatan: namaKec,
+        komoditas: komoditas,
+        luas: luas,
+        tahun: tabel.tahun_data || "2024",
+        satuan: satuan,
+        sumber: "BPS"
+      });
+    }
+  });
+
+  console.log("📊 Total baris hasil mapping BPS:", dataBPS.length);
+  allData = allData.concat(dataBPS);
+}
+      
+      if (res2.ok && json2.data) {
+        console.log("✅ API BPS berhasil:", json2.data.length);
+        const dataBPS = json2.data.map(r => ({
+          kecamatan: r.nama_kecamatan || "-",
+          komoditas: r.komoditas || "-",
+          luas: parseFloat((r.luas || "0").toString().replace(",", ".")),
+          tahun: r.tahun || "2024",
+          satuan: r.satuan || "Ha",
+          sumber: "BPS"
+        }));
+        allData = allData.concat(dataBPS);
       }
 
-      // ==== 2. Render judul & breadcrumb ====
-      $(".share-link").append(sosmed("Luas Panen Aceh Utara"));
+      console.log("📊 Total data gabungan:", allData.length);
+
+      // === 3. Judul & breadcrumb ===
+      $(".share-link").append(sosmed("Dashboard Panen"));
       $(".breadcrumb").html(`
-      <li class="breadcrumb-item"><a href="/">Home</a></li>
-      <li class="breadcrumb-item"><a href="/${segments(1)}">${segments(1)}</a></li>
-      <li class="breadcrumb-item active" aria-current="page">Luas Panen Aceh Utara</li>
-    `);
+        <li class="breadcrumb-item"><a href="/">Home</a></li>
+        <li class="breadcrumb-item active" aria-current="page">Dashboard Panen</li>`);
 
       if (segments(1) === "halaman" && segments(2) === "chart-panen") {
-        setTitle("Dashboard Luas Panen Aceh Utara");
-        $(".judul-berita").html("Luas Panen Aceh Utara");
+        setTitle("Dashboard Luas Panen (Satu Data + BPS)");
+        $(".judul-berita").html("Dashboard Luas Panen (Satu Data + BPS)");
 
-        // === Inject HTML Dashboard ===
+        // === 4. Inject HTML Dashboard ===
         $(".isi-berita").html(`<!-- 🔍 FILTER -->
 <div class="card shadow-sm mb-3">
   <div class="card-body">
@@ -239,7 +255,7 @@
 </div>
 
     <div class="table-responsive">
-      <table class="table table-striped table-hover table-bordered mb-0" id="tabelPanen">
+      <table class="table table-striped table-hover table-bordered mb-0" id="tableDashboard">
         <thead class="table-light">
   <tr>
     <th>No</th>
@@ -254,10 +270,10 @@
       <div id="pagination" class="mt-2"></div>
     </div>
   </div>
-</div>`); // HTML dashboard seperti sebelumnya
+</div>`);
         $(".card").fadeIn();
 
-        // ==== 3. Load scripts eksternal ====
+        // === 5. Load script eksternal ===
         const loadScript = src => new Promise(res => {
           const s = document.createElement("script");
           s.src = src;
@@ -266,63 +282,16 @@
         });
 
         await loadScript("https://cdn.jsdelivr.net/npm/apexcharts");
-        await loadScript("/themes/_ceudah-copy/assets/js/chart-dashboard.js?v=" + Date.now());
         await loadScript("https://cdn.jsdelivr.net/npm/jsvectormap");
+        await loadScript("/themes/_ceudah-copy/assets/js/chart-dashboard.js?v=" + Date.now());
         await loadScript("/themes/_ceudah-copy/assets/js/kecamatanmap.js?v=" + Date.now());
         await loadScript("/themes/_ceudah-copy/assets/js/map-dashboard.js?v=" + Date.now());
 
-        // ==== 4. Isi dropdown filter ====
-        const kecSet = [...new Set(allData.map(d => d.kecamatan))];
-        const komSet = [...new Set(allData.map(d => d.komoditas))];
-        const thnSet = [...new Set(allData.map(d => d.tahun))];
-
-        kecSet.forEach(k => $("#filterKecamatan, #tableFilterKecamatan").append(`<option value="${k}">${k}</option>`));
-        komSet.forEach(k => $("#filterKomoditas, #tableFilterKomoditas").append(`<option value="${k}">${k}</option>`));
-        thnSet.forEach(t => $("#filterTahun, #tableFilterTahun").append(`<option value="${t}">${t}</option>`));
-
-        // ==== 5. Filter untuk Chart (global) ====
-        function applyFilters() {
-          const kec = $("#filterKecamatan").val();
-          const kom = $("#filterKomoditas").val();
-          const thn = $("#filterTahun").val();
-
-          let filtered = [...allData];
-          if (kec) filtered = filtered.filter(d => d.kecamatan === kec);
-          if (kom) filtered = filtered.filter(d => d.komoditas === kom);
-          if (thn) filtered = filtered.filter(d => String(d.tahun) === String(thn));
-
-          updateKPI(filtered);
-          renderCharts(filtered);
-          // updateKPI(filtered);
-        }
-        $("#filterKecamatan, #filterKomoditas, #filterTahun").on("change", applyFilters);
-
-        // ==== 6. Filter khusus Table ====
-        let currentTableData = [...allData]; // default semua data
-
-        function updateTable() {
-          currentPage = 1; // ✅ reset halaman tiap filter baru
-          const kec = $("#tableFilterKecamatan").val();
-          const kom = $("#tableFilterKomoditas").val();
-          const thn = $("#tableFilterTahun").val();
-
-          currentTableData = [...allData];
-          if (kec) currentTableData = currentTableData.filter(d => d.kecamatan === kec);
-          if (kom) currentTableData = currentTableData.filter(d => d.komoditas === kom);
-          if (thn) currentTableData = currentTableData.filter(d => String(d.tahun) === String(thn));
-
-          renderTable(currentTableData);
-        }
-        $("#tableFilterKecamatan, #tableFilterKomoditas, #tableFilterTahun").on("change", updateTable);
-
-        // ==== 7. Render awal ====
-        renderMap();
-        applyFilters(); // chart semua data
-        // updateKPI(allData);
-        updateTable();  // table semua data
+        // === 6. Render dashboard ===
+        initDashboard(allData); // 🔥 gabungan data
       }
     } catch (err) {
-      console.error("Gagal load JSON:", err);
+      console.error("❌ Gagal load data API:", err);
     }
   });
 </script>
