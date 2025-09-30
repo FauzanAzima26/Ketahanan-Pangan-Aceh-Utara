@@ -1,45 +1,54 @@
-  <cms:pre:render>CMS_Include('header.html')</cms:pre:render>
+<cms:pre:render>CMS_Include('header.html')</cms:pre:render>
 
-  <main role="main">
-    <div class="container mt-2 mt-md-0">
-      <div class="row">
-        <div class="col-md-12 content-area">
+<main role="main">
+  <div class="container mt-2 mt-md-0">
+    <div class="row">
+      <div class="col-md-12 content-area">
 
-          <nav aria-label="breadcrumb" class="mb-3">
-            <ol class="breadcrumb bg-light p-2 rounded small mb-0"></ol>
-          </nav>
+        <nav aria-label="breadcrumb" class="mb-3">
+          <ol class="breadcrumb bg-light p-2 rounded small mb-0"></ol>
+        </nav>
 
-          <div class="single-berita">
-            <div class="card" style="width: 100%; display: none;">
-              <div class="card-header">
-                <h1 class="card-title judul-berita">Title</h1>
-                <div class="share-link mt-2">bagikan:</div>
-              </div>
-              <div class="card-body isi-berita"></div>
+        <div class="single-berita">
+          <div class="card" style="width: 100%; display: none;">
+            <div class="card-header">
+              <h1 class="card-title judul-berita">Title</h1>
+              <div class="share-link mt-2">bagikan:</div>
             </div>
+            <div class="card-body isi-berita"></div>
           </div>
-
         </div>
+
       </div>
     </div>
-  </main>
+  </div>
+</main>
 
-  <cms:pre:render>CMS_Include('footer.html')</cms:pre:render>
+<cms:pre:render>CMS_Include('footer.html')</cms:pre:render>
 
-  <script type="text/javascript">
-    CMS.Loaded(async function () {
-      function sosmed(judul) {
-        const url = window.location.href;
-        return `
-          <a href="//www.facebook.com/share.php?u=${url}" target="_blank"><img src="/themes/_ceudah-copy/assets/images/facebook.png" width="24"/></a>
-          <a href="//twitter.com/intent/tweet?url=${url}&text=${judul}" target="_blank"><img src="/themes/_ceudah-copy/assets/images/twitter.png" width="24"/></a>
-          <a href="whatsapp://send?text=${judul} ${url}" target="_blank"><img src="/themes/_ceudah-copy/assets/images/whatsapp.png" width="24"/></a>`;
-      }
+<script type="text/javascript">
+CMS.Loaded(async function () {
+  // === helper untuk load script eksternal ===
+  const loadScript = src => new Promise(res => {
+    const s = document.createElement("script");
+    s.src = src;
+    s.onload = res;
+    document.body.appendChild(s);
+  });
 
-      try {
-        let allData = [];
+  // === helper share sosmed ===
+  function sosmed(judul) {
+    const url = window.location.href;
+    return `
+      <a href="//www.facebook.com/share.php?u=${url}" target="_blank"><img src="/themes/_ceudah-copy/assets/images/facebook.png" width="24"/></a>
+      <a href="//twitter.com/intent/tweet?url=${url}&text=${judul}" target="_blank"><img src="/themes/_ceudah-copy/assets/images/twitter.png" width="24"/></a>
+      <a href="whatsapp://send?text=${judul} ${url}" target="_blank"><img src="/themes/_ceudah-copy/assets/images/whatsapp.png" width="24"/></a>`;
+  }
 
-        // === 1. Ambil data dari API Satu Data Aceh Utara ===
+  try {
+    let allData = [];
+
+    // === 1. Ambil data dari API Satu Data Aceh Utara ===
         const urlSatuData = "https://satudata.acehutara.go.id/api/3/action/datastore_search?resource_id=559e8bea-c48b-4bda-adbf-5fc146c160ec&limit=500";
         const res1 = await fetch(urlSatuData);
         const json1 = await res1.json();
@@ -336,21 +345,21 @@ if (resBPS2020.ok && jsonBPS2020.data && jsonBPS2020.data[1]) {
   allData = allData.concat(dataBPS2021);
   console.log("📊 Total data BPS 2021:", dataBPS2021.length);
 }
+    console.log("📊 Total data gabungan:", allData.length);
 
-        console.log("📊 Total data gabungan:", allData.length);
+    // === 2. Judul & breadcrumb ===
+    $(".share-link").append(sosmed("Dashboard Panen"));
+    $(".breadcrumb").html(`
+      <li class="breadcrumb-item"><a href="/">Home</a></li>
+      <li class="breadcrumb-item active" aria-current="page">Dashboard</li>`);
 
-        // === 3. Judul & breadcrumb ===
-        $(".share-link").append(sosmed("Dashboard Panen"));
-        $(".breadcrumb").html(`
-          <li class="breadcrumb-item"><a href="/">Home</a></li>
-          <li class="breadcrumb-item active" aria-current="page">Dashboard Panen</li>`);
+    // === 3. Routing halaman ===
+    if (segments(1) === "halaman" && segments(2) === "ketahanan-pangan") {
+      // --- Halaman khusus dashboard ---
+      setTitle("Dashboard Luas Panen (Satu Data + BPS)");
+      $(".judul-berita").html("Tren Ketahanan Pangan Aceh Utara");
 
-        if (segments(1) === "halaman" && segments(2) === "chart-panen") {
-          setTitle("Dashboard Luas Panen (Satu Data + BPS)");
-          $(".judul-berita").html("Dashboard Luas Panen (Satu Data + BPS)");
-
-          // === 4. Inject HTML Dashboard ===
-          $(".isi-berita").html(`<!-- 🔍 FILTER -->
+      $(".isi-berita").html(`<!-- 🔍 FILTER -->
   <div class="card shadow-sm mb-3">
     <div class="card-body">
       <div class="row g-3 align-items-center">
@@ -450,27 +459,35 @@ if (resBPS2020.ok && jsonBPS2020.data && jsonBPS2020.data[1]) {
   </div>
 </div>
   </div>`);
+      $(".card").fadeIn();
+
+      // load chart lib
+      await loadScript("https://cdn.jsdelivr.net/npm/apexcharts");
+
+      // load script eksternal
+      await loadScript("https://cdn.jsdelivr.net/npm/jsvectormap");
+      await loadScript("/themes/_ceudah-copy/assets/js/chart-dashboard.js?v=" + Date.now());
+      await loadScript("/themes/_ceudah-copy/assets/js/kecamatanmap.js?v=" + Date.now());
+      await loadScript("/themes/_ceudah-copy/assets/js/map-dashboard.js?v=" + Date.now());
+
+      // render dashboard
+      initDashboard(allData);
+
+    } else if (segments(1) === "halaman" || segments(1) === "berita") {
+      // --- fallback ke konten CMS ---
+      const jsonUrl = '/json' + cleanSlash(window.location.pathname) + '.json?mode=origin';
+      fetch(jsonUrl)
+        .then(r => r.json())
+        .then(json => {
+          setTitle(json.judul);
+          $(".judul-berita").html(json.judul);
+          $(".isi-berita").html(json.konten);
           $(".card").fadeIn();
+        });
+    }
 
-          // === 5. Load script eksternal ===
-          const loadScript = src => new Promise(res => {
-            const s = document.createElement("script");
-            s.src = src;
-            s.onload = res;
-            document.body.appendChild(s);
-          });
-
-          await loadScript("https://cdn.jsdelivr.net/npm/apexcharts");
-          await loadScript("https://cdn.jsdelivr.net/npm/jsvectormap");
-          await loadScript("/themes/_ceudah-copy/assets/js/chart-dashboard.js?v=" + Date.now());
-          await loadScript("/themes/_ceudah-copy/assets/js/kecamatanmap.js?v=" + Date.now());
-          await loadScript("/themes/_ceudah-copy/assets/js/map-dashboard.js?v=" + Date.now());
-
-          // === 6. Render dashboard ===
-          initDashboard(allData); // 🔥 gabungan data
-        }
-      } catch (err) {
-        console.error("❌ Gagal load data API:", err);
-      }
-    });
-  </script>
+  } catch (err) {
+    console.error("❌ Gagal load data API:", err);
+  }
+});
+</script>
