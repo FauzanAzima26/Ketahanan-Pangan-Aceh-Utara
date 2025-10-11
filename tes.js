@@ -154,15 +154,15 @@ function renderSayurBuahChart(filtered) {
     })),
     ...(others.length > 0
       ? [
-          {
-            x: "Lainnya",
-            y: truncate4(others.reduce((sum, [, luas]) => sum + luas, 0)),
-            detail: others.map(([komoditas, luas]) => ({
-              name: komoditas,
-              value: luas,
-            })),
-          },
-        ]
+        {
+          x: "Lainnya",
+          y: truncate4(others.reduce((sum, [, luas]) => sum + luas, 0)),
+          detail: others.map(([komoditas, luas]) => ({
+            name: komoditas,
+            value: luas,
+          })),
+        },
+      ]
       : []),
   ];
 
