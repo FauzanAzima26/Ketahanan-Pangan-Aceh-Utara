@@ -27,166 +27,166 @@
 <cms:pre:render>CMS_Include('footer.html')</cms:pre:render>
 
 <script type="text/javascript">
-CMS.Loaded(async function () {
-  // === helper untuk load script eksternal ===
-  const loadScript = src => new Promise(res => {
-    const s = document.createElement("script");
-    s.src = src;
-    s.onload = res;
-    document.body.appendChild(s);
-  });
+  CMS.Loaded(async function () {
+    // === helper untuk load script eksternal ===
+    const loadScript = src => new Promise(res => {
+      const s = document.createElement("script");
+      s.src = src;
+      s.onload = res;
+      document.body.appendChild(s);
+    });
 
-  // === helper share sosmed ===
-  function sosmed(judul) {
-    const url = window.location.href;
-    return `
+    // === helper share sosmed ===
+    function sosmed(judul) {
+      const url = window.location.href;
+      return `
       <a href="//www.facebook.com/share.php?u=${url}" target="_blank"><img src="/themes/_ceudah-copy/assets/images/facebook.png" width="24"/></a>
       <a href="//twitter.com/intent/tweet?url=${url}&text=${judul}" target="_blank"><img src="/themes/_ceudah-copy/assets/images/twitter.png" width="24"/></a>
       <a href="whatsapp://send?text=${judul} ${url}" target="_blank"><img src="/themes/_ceudah-copy/assets/images/whatsapp.png" width="24"/></a>`;
-  }
+    }
 
-  try {
-    let allData = [];
+    try {
+      let allData = [];
 
-    // === 1. Ambil data dari API Satu Data Aceh Utara ===
-        const urlSatuData = "https://satudata.acehutara.go.id/api/3/action/datastore_search?resource_id=559e8bea-c48b-4bda-adbf-5fc146c160ec&limit=500";
-        const res1 = await fetch(urlSatuData);
-        const json1 = await res1.json();
+      // === 1. Ambil data dari API Satu Data Aceh Utara ===
+      const urlSatuData = "https://satudata.acehutara.go.id/api/3/action/datastore_search?resource_id=559e8bea-c48b-4bda-adbf-5fc146c160ec&limit=500";
+      const res1 = await fetch(urlSatuData);
+      const json1 = await res1.json();
 
-        if (res1.ok && json1.success) {
-          console.log("✅ API Satu Data berhasil:", json1.result.records.length);
-          const dataSatuData = json1.result.records.map(r => ({
-            kecamatan: r.kemendagri_nama_kecamatan || "-",
-            komoditas: r.komotditi || "-",
-            luas: parseFloat((r.luas_panen || "0").toString().replace(",", ".")),
-            tahun: r.tahun || "2023",
-            satuan: "Ha",
-            sumber: "Satu Data"
-          }));
-          allData = allData.concat(dataSatuData);
-        }
+      if (res1.ok && json1.success) {
+        console.log("✅ API Satu Data berhasil:", json1.result.records.length);
+        const dataSatuData = json1.result.records.map(r => ({
+          kecamatan: r.kemendagri_nama_kecamatan || "-",
+          komoditas: r.komotditi || "-",
+          luas: parseFloat((r.luas_panen || "0").toString().replace(",", ".")),
+          tahun: r.tahun || "2023",
+          satuan: "Ha",
+          sumber: "Satu Data"
+        }));
+        allData = allData.concat(dataSatuData);
+      }
 
-        // === 2. Ambil data dari API BPS ===
-        const urlBPS = "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2024/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f";
-        const res2 = await fetch(urlBPS);
-        const json2 = await res2.json();
+      // === 2. Ambil data dari API BPS ===
+      const urlBPS = "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2024/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f";
+      const res2 = await fetch(urlBPS);
+      const json2 = await res2.json();
 
-        if (res2.ok && json2.data && json2.data[1]) {
-          const tabel = json2.data[1];
-          const rows = tabel.data || [];      // daftar kecamatan
-          const kolom = tabel.kolom || {};    // metadata variabel
+      if (res2.ok && json2.data && json2.data[1]) {
+        const tabel = json2.data[1];
+        const rows = tabel.data || [];      // daftar kecamatan
+        const kolom = tabel.kolom || {};    // metadata variabel
 
-          console.log("✅ API BPS berhasil, total kecamatan:", rows.length);
-          console.log("🔑 Daftar variabel:", Object.keys(kolom).length);
+        console.log("✅ API BPS berhasil, total kecamatan:", rows.length);
+        console.log("🔑 Daftar variabel:", Object.keys(kolom).length);
 
-          // === robust mapping BPS ===
-          const dataBPS = [];
+        // === robust mapping BPS ===
+        const dataBPS = [];
 
-          rows.forEach(kec => {
-            const namaKec = (kec.label || "-").trim();
-            const vars = kec.variables || {};
+        rows.forEach(kec => {
+          const namaKec = (kec.label || "-").trim();
+          const vars = kec.variables || {};
 
-            for (const kodeVar in vars) {
-              if (!kolom[kodeVar]) continue;
+          for (const kodeVar in vars) {
+            if (!kolom[kodeVar]) continue;
 
-              const meta = kolom[kodeVar];
-              // normalisasi nama komoditas
-              let komoditasRaw = (meta.nama_variabel || "-").toString().trim();
-              let komoditas = komoditasRaw
-                .replace(/luas panen\s*/i, "")
-                .replace(/\(.*?\)/g, "")
-                .replace(/\bha\b/i, "")
-                .trim();
-              if (!komoditas) komoditas = komoditasRaw;
+            const meta = kolom[kodeVar];
+            // normalisasi nama komoditas
+            let komoditasRaw = (meta.nama_variabel || "-").toString().trim();
+            let komoditas = komoditasRaw
+              .replace(/luas panen\s*/i, "")
+              .replace(/\(.*?\)/g, "")
+              .replace(/\bha\b/i, "")
+              .trim();
+            if (!komoditas) komoditas = komoditasRaw;
 
-              // ambil raw value
-              let rawVal = vars[kodeVar];
-              if (rawVal && typeof rawVal === "object") {
-                if (rawVal.value != null) rawVal = rawVal.value;
-                else if (rawVal.v != null) rawVal = rawVal.v;
-                else {
-                  const keys = Object.keys(rawVal);
-                  if (keys.length === 1 && (typeof rawVal[keys[0]] !== "object")) {
-                    rawVal = rawVal[keys[0]];
-                  } else {
-                    const maybeNum = keys.map(k => rawVal[k]).find(x => x != null && x !== "");
-                    rawVal = maybeNum != null ? maybeNum : 0;
-                  }
+            // ambil raw value
+            let rawVal = vars[kodeVar];
+            if (rawVal && typeof rawVal === "object") {
+              if (rawVal.value != null) rawVal = rawVal.value;
+              else if (rawVal.v != null) rawVal = rawVal.v;
+              else {
+                const keys = Object.keys(rawVal);
+                if (keys.length === 1 && (typeof rawVal[keys[0]] !== "object")) {
+                  rawVal = rawVal[keys[0]];
+                } else {
+                  const maybeNum = keys.map(k => rawVal[k]).find(x => x != null && x !== "");
+                  rawVal = maybeNum != null ? maybeNum : 0;
                 }
               }
-
-              // parsing ke float
-              const luas = rawVal === 0 || rawVal === "0" || rawVal === 0.0
-                ? 0
-                : (rawVal != null ? parseFloat(String(rawVal).replace(/,/g, ".")) || 0 : 0);
-
-              dataBPS.push({
-                kecamatan: namaKec,
-                komoditas: komoditas,
-                luas: luas,
-                tahun: tabel.tahun_data || "2024",
-                satuan: meta.satuan || "-",
-                sumber: "BPS"
-              });
             }
-          });
 
-          console.log("📊 Total baris hasil mapping BPS:", dataBPS.length);
-          console.groupCollapsed("DEBUG sample mapped BPS");
-          console.table(dataBPS.slice(0, 30));
-          console.log("BPS rows with luas>0:", dataBPS.filter(r => r.luas > 0).length);
-          console.groupEnd();
+            // parsing ke float
+            const luas = rawVal === 0 || rawVal === "0" || rawVal === 0.0
+              ? 0
+              : (rawVal != null ? parseFloat(String(rawVal).replace(/,/g, ".")) || 0 : 0);
 
-          window.dataBPS = dataBPS;
-          allData = allData.concat(dataBPS);
-        }
+            dataBPS.push({
+              kecamatan: namaKec,
+              komoditas: komoditas,
+              luas: luas,
+              tahun: tabel.tahun_data || "2024",
+              satuan: meta.satuan || "-",
+              sumber: "BPS"
+            });
+          }
+        });
 
-        const urlBPS2023 = "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2023/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f";
-        const res3 = await fetch(urlBPS2023);
-        const json3 = await res3.json();
+        console.log("📊 Total baris hasil mapping BPS:", dataBPS.length);
+        console.groupCollapsed("DEBUG sample mapped BPS");
+        console.table(dataBPS.slice(0, 30));
+        console.log("BPS rows with luas>0:", dataBPS.filter(r => r.luas > 0).length);
+        console.groupEnd();
 
-        if (res3.ok && json3.data && json3.data[1]) {
-          const tabel3 = json3.data[1];
-          const rows3 = tabel3.data || [];
-          const kolom3 = tabel3.kolom || {};
+        window.dataBPS = dataBPS;
+        allData = allData.concat(dataBPS);
+      }
 
-          const dataBPS2023 = [];
+      const urlBPS2023 = "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2023/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f";
+      const res3 = await fetch(urlBPS2023);
+      const json3 = await res3.json();
 
-          rows3.forEach(kec => {
-            const namaKec = (kec.label || "-").trim();
-            const vars = kec.variables || {};
-            for (const kodeVar in vars) {
-              if (!kolom3[kodeVar]) continue;
-              const meta = kolom3[kodeVar];
-              let komoditasRaw = (meta.nama_variabel || "-").toString().trim();
-              let komoditas = komoditasRaw.replace(/luas panen\s*/i, "").replace(/\(.*?\)/g, "").replace(/\bha\b/i, "").trim();
-              if (!komoditas) komoditas = komoditasRaw;
+      if (res3.ok && json3.data && json3.data[1]) {
+        const tabel3 = json3.data[1];
+        const rows3 = tabel3.data || [];
+        const kolom3 = tabel3.kolom || {};
 
-              let rawVal = vars[kodeVar];
-              if (rawVal && typeof rawVal === "object") {
-                if (rawVal.value != null) rawVal = rawVal.value;
-                else if (rawVal.v != null) rawVal = rawVal.v;
-                else rawVal = 0;
-              }
+        const dataBPS2023 = [];
 
-              const luas = rawVal != null ? parseFloat(String(rawVal).replace(/,/g, ".")) || 0 : 0;
+        rows3.forEach(kec => {
+          const namaKec = (kec.label || "-").trim();
+          const vars = kec.variables || {};
+          for (const kodeVar in vars) {
+            if (!kolom3[kodeVar]) continue;
+            const meta = kolom3[kodeVar];
+            let komoditasRaw = (meta.nama_variabel || "-").toString().trim();
+            let komoditas = komoditasRaw.replace(/luas panen\s*/i, "").replace(/\(.*?\)/g, "").replace(/\bha\b/i, "").trim();
+            if (!komoditas) komoditas = komoditasRaw;
 
-              dataBPS2023.push({
-                kecamatan: namaKec,
-                komoditas: komoditas,
-                luas: luas,
-                tahun: tabel3.tahun_data || "2023",
-                satuan: meta.satuan || "-",
-                sumber: "BPS 2023"
-              });
+            let rawVal = vars[kodeVar];
+            if (rawVal && typeof rawVal === "object") {
+              if (rawVal.value != null) rawVal = rawVal.value;
+              else if (rawVal.v != null) rawVal = rawVal.v;
+              else rawVal = 0;
             }
-          });
 
-          // gabungkan ke allData
-          allData = allData.concat(dataBPS2023);
-        }
+            const luas = rawVal != null ? parseFloat(String(rawVal).replace(/,/g, ".")) || 0 : 0;
 
-        // === 4. Ambil data dari API BPS 2022 ===
+            dataBPS2023.push({
+              kecamatan: namaKec,
+              komoditas: komoditas,
+              luas: luas,
+              tahun: tabel3.tahun_data || "2023",
+              satuan: meta.satuan || "-",
+              sumber: "BPS 2023"
+            });
+          }
+        });
+
+        // gabungkan ke allData
+        allData = allData.concat(dataBPS2023);
+      }
+
+      // === 4. Ambil data dari API BPS 2022 ===
       const urlBPS2022 = "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2022/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f";
       const resBPS2022 = await fetch(urlBPS2022);
       const jsonBPS2022 = await resBPS2022.json();
@@ -207,9 +207,9 @@ CMS.Loaded(async function () {
 
             let komoditasRaw = (meta.nama_variabel || "-").toString().trim();
             let komoditas = komoditasRaw.replace(/luas panen\s*/i, "")
-                                        .replace(/\(.*?\)/g, "")
-                                        .replace(/\bha\b/i, "")
-                                        .trim();
+              .replace(/\(.*?\)/g, "")
+              .replace(/\bha\b/i, "")
+              .trim();
             if (!komoditas) komoditas = komoditasRaw;
 
             let rawVal = vars[kodeVar];
@@ -236,130 +236,130 @@ CMS.Loaded(async function () {
 
         allData = allData.concat(dataBPS2022);
       }
-        
-        // === Ambil data dari API BPS 2021 ===
-const urlBPS2021 = "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2021/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f";
-const resBPS2021 = await fetch(urlBPS2021);
-const jsonBPS2021 = await resBPS2021.json();
 
-if (resBPS2021.ok && jsonBPS2021.data && jsonBPS2021.data[1]) {
-  const tabelBPS2021 = jsonBPS2021.data[1];
-  const rowsBPS2021 = tabelBPS2021.data || [];
-  const kolomBPS2021 = tabelBPS2021.kolom || {};
+      // === Ambil data dari API BPS 2021 ===
+      const urlBPS2021 = "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2021/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f";
+      const resBPS2021 = await fetch(urlBPS2021);
+      const jsonBPS2021 = await resBPS2021.json();
 
-  const dataBPS2021 = [];
+      if (resBPS2021.ok && jsonBPS2021.data && jsonBPS2021.data[1]) {
+        const tabelBPS2021 = jsonBPS2021.data[1];
+        const rowsBPS2021 = tabelBPS2021.data || [];
+        const kolomBPS2021 = tabelBPS2021.kolom || {};
 
-  rowsBPS2021.forEach(kec => {
-    const namaKec = (kec.label || "-").trim();
-    const vars = kec.variables || {};
+        const dataBPS2021 = [];
 
-    for (const kodeVar in vars) {
-      if (!kolomBPS2021[kodeVar]) continue;
-      const meta = kolomBPS2021[kodeVar];
+        rowsBPS2021.forEach(kec => {
+          const namaKec = (kec.label || "-").trim();
+          const vars = kec.variables || {};
 
-      let komoditasRaw = (meta.nama_variabel || "-").toString().trim();
-      let komoditas = komoditasRaw.replace(/luas panen\s*/i, "")
-                                  .replace(/\(.*?\)/g, "")
-                                  .replace(/\bha\b/i, "")
-                                  .trim();
-      if (!komoditas) komoditas = komoditasRaw;
+          for (const kodeVar in vars) {
+            if (!kolomBPS2021[kodeVar]) continue;
+            const meta = kolomBPS2021[kodeVar];
 
-      let rawVal = vars[kodeVar];
-      if (rawVal && typeof rawVal === "object") {
-        if (rawVal.value != null) rawVal = rawVal.value;
-        else if (rawVal.v != null) rawVal = rawVal.v;
-        else rawVal = 0;
+            let komoditasRaw = (meta.nama_variabel || "-").toString().trim();
+            let komoditas = komoditasRaw.replace(/luas panen\s*/i, "")
+              .replace(/\(.*?\)/g, "")
+              .replace(/\bha\b/i, "")
+              .trim();
+            if (!komoditas) komoditas = komoditasRaw;
+
+            let rawVal = vars[kodeVar];
+            if (rawVal && typeof rawVal === "object") {
+              if (rawVal.value != null) rawVal = rawVal.value;
+              else if (rawVal.v != null) rawVal = rawVal.v;
+              else rawVal = 0;
+            }
+
+            let luas = rawVal != null ? parseFloat(String(rawVal).replace(/,/g, ".")) || 0 : 0;
+
+            if ((meta.satuan || "").toLowerCase().includes("m<sup>2")) luas = luas / 10000;
+
+            dataBPS2021.push({
+              kecamatan: namaKec,
+              komoditas: komoditas,
+              luas: luas,
+              tahun: tabelBPS2021.tahun_data || "2021",
+              satuan: meta.satuan || "-",
+              sumber: "BPS 2021"
+            });
+          }
+        });
+
+        // === Ambil data dari API BPS 2020 ===
+        const urlBPS2020 = "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2020/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f";
+        const resBPS2020 = await fetch(urlBPS2020);
+        const jsonBPS2020 = await resBPS2020.json();
+
+        if (resBPS2020.ok && jsonBPS2020.data && jsonBPS2020.data[1]) {
+          const tabelBPS2020 = jsonBPS2020.data[1];
+          const rowsBPS2020 = tabelBPS2020.data || [];
+          const kolomBPS2020 = tabelBPS2020.kolom || {};
+
+          const dataBPS2020 = [];
+
+          rowsBPS2020.forEach(kec => {
+            const namaKec = (kec.label || "-").trim();
+            const vars = kec.variables || {};
+
+            for (const kodeVar in vars) {
+              if (!kolomBPS2020[kodeVar]) continue;
+              const meta = kolomBPS2020[kodeVar];
+
+              // Normalisasi nama komoditas
+              let komoditasRaw = (meta.nama_variabel || "-").toString().trim();
+              let komoditas = komoditasRaw.replace(/luas panen\s*/i, "")
+                .replace(/\(.*?\)/g, "")
+                .replace(/\bha\b/i, "")
+                .trim();
+              if (!komoditas) komoditas = komoditasRaw;
+
+              // Ambil nilai
+              let rawVal = vars[kodeVar];
+              if (rawVal && typeof rawVal === "object") {
+                if (rawVal.value != null) rawVal = rawVal.value;
+                else if (rawVal.v != null) rawVal = rawVal.v;
+                else rawVal = 0;
+              }
+
+              let luas = rawVal != null ? parseFloat(String(rawVal).replace(/,/g, ".")) || 0 : 0;
+
+              // Konversi m² ke Ha
+              if ((meta.satuan || "").toLowerCase().includes("m<sup>2")) luas = luas / 10000;
+
+              dataBPS2020.push({
+                kecamatan: namaKec,
+                komoditas: komoditas,
+                luas: luas,
+                tahun: tabelBPS2020.tahun_data || "2020",
+                satuan: meta.satuan || "-",
+                sumber: "BPS 2020"
+              });
+            }
+          });
+
+          allData = allData.concat(dataBPS2020);
+          console.log("📊 Total data BPS 2020:", dataBPS2020.length);
+        }
+
+        allData = allData.concat(dataBPS2021);
+        console.log("📊 Total data BPS 2021:", dataBPS2021.length);
       }
+      console.log("📊 Total data gabungan:", allData.length);
 
-      let luas = rawVal != null ? parseFloat(String(rawVal).replace(/,/g, ".")) || 0 : 0;
-
-      if ((meta.satuan || "").toLowerCase().includes("m<sup>2")) luas = luas / 10000;
-
-      dataBPS2021.push({
-        kecamatan: namaKec,
-        komoditas: komoditas,
-        luas: luas,
-        tahun: tabelBPS2021.tahun_data || "2021",
-        satuan: meta.satuan || "-",
-        sumber: "BPS 2021"
-      });
-    }
-  });
-  
-  // === Ambil data dari API BPS 2020 ===
-const urlBPS2020 = "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2020/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f";
-const resBPS2020 = await fetch(urlBPS2020);
-const jsonBPS2020 = await resBPS2020.json();
-
-if (resBPS2020.ok && jsonBPS2020.data && jsonBPS2020.data[1]) {
-  const tabelBPS2020 = jsonBPS2020.data[1];
-  const rowsBPS2020 = tabelBPS2020.data || [];
-  const kolomBPS2020 = tabelBPS2020.kolom || {};
-
-  const dataBPS2020 = [];
-
-  rowsBPS2020.forEach(kec => {
-    const namaKec = (kec.label || "-").trim();
-    const vars = kec.variables || {};
-
-    for (const kodeVar in vars) {
-      if (!kolomBPS2020[kodeVar]) continue;
-      const meta = kolomBPS2020[kodeVar];
-
-      // Normalisasi nama komoditas
-      let komoditasRaw = (meta.nama_variabel || "-").toString().trim();
-      let komoditas = komoditasRaw.replace(/luas panen\s*/i, "")
-                                  .replace(/\(.*?\)/g, "")
-                                  .replace(/\bha\b/i, "")
-                                  .trim();
-      if (!komoditas) komoditas = komoditasRaw;
-
-      // Ambil nilai
-      let rawVal = vars[kodeVar];
-      if (rawVal && typeof rawVal === "object") {
-        if (rawVal.value != null) rawVal = rawVal.value;
-        else if (rawVal.v != null) rawVal = rawVal.v;
-        else rawVal = 0;
-      }
-
-      let luas = rawVal != null ? parseFloat(String(rawVal).replace(/,/g, ".")) || 0 : 0;
-
-      // Konversi m² ke Ha
-      if ((meta.satuan || "").toLowerCase().includes("m<sup>2")) luas = luas / 10000;
-
-      dataBPS2020.push({
-        kecamatan: namaKec,
-        komoditas: komoditas,
-        luas: luas,
-        tahun: tabelBPS2020.tahun_data || "2020",
-        satuan: meta.satuan || "-",
-        sumber: "BPS 2020"
-      });
-    }
-  });
-
-  allData = allData.concat(dataBPS2020);
-  console.log("📊 Total data BPS 2020:", dataBPS2020.length);
-}
-
-  allData = allData.concat(dataBPS2021);
-  console.log("📊 Total data BPS 2021:", dataBPS2021.length);
-}
-    console.log("📊 Total data gabungan:", allData.length);
-
-    // === 2. Judul & breadcrumb ===
-    $(".share-link").append(sosmed("Dashboard Panen"));
-    $(".breadcrumb").html(`
+      // === 2. Judul & breadcrumb ===
+      $(".share-link").append(sosmed("Dashboard Panen"));
+      $(".breadcrumb").html(`
       <li class="breadcrumb-item"><a href="/">Home</a></li>
       <li class="breadcrumb-item active" aria-current="page">Dashboard</li>`);
 
-    // === 3. Routing halaman ===
-    if (segments(1) === "halaman" && segments(2) === "ketahanan-pangan") {
-      // --- Halaman khusus dashboard ---
-      setTitle("Dashboard Luas Panen (Satu Data + BPS)");
-      $(".judul-berita").html("Tren Ketahanan Pangan Aceh Utara");
+      // === 3. Routing halaman ===
+      if (segments(1) === "halaman" && segments(2) === "ketahanan-pangan") {
+        // --- Halaman khusus dashboard ---
+        setTitle("Dashboard Luas Panen (Satu Data + BPS)");
+        $(".judul-berita").html("Tren Ketahanan Pangan Aceh Utara");
 
-      $(".isi-berita").html(`<!-- 🔍 FILTER -->
+        $(".isi-berita").html(`<!-- 🔍 FILTER -->
   <div class="card shadow-sm mb-3">
     <div class="card-body">
       <div class="row g-3 align-items-center">
@@ -459,35 +459,35 @@ if (resBPS2020.ok && jsonBPS2020.data && jsonBPS2020.data[1]) {
   </div>
 </div>
   </div>`);
-      $(".card").fadeIn();
+        $(".card").fadeIn();
 
-      // load chart lib
-      await loadScript("https://cdn.jsdelivr.net/npm/apexcharts");
+        // load chart lib
+        await loadScript("https://cdn.jsdelivr.net/npm/apexcharts");
 
-      // load script eksternal
-      await loadScript("https://cdn.jsdelivr.net/npm/jsvectormap");
-      await loadScript("/themes/_ceudah-copy/assets/js/chart-dashboard.js?v=" + Date.now());
-      await loadScript("/themes/_ceudah-copy/assets/js/kecamatanmap.js?v=" + Date.now());
-      await loadScript("/themes/_ceudah-copy/assets/js/map-dashboard.js?v=" + Date.now());
+        // load script eksternal
+        await loadScript("https://cdn.jsdelivr.net/npm/jsvectormap");
+        await loadScript("/themes/_ceudah-copy/assets/js/chart-dashboard.js?v=" + Date.now());
+        await loadScript("/themes/_ceudah-copy/assets/js/kecamatanmap.js?v=" + Date.now());
+        await loadScript("/themes/_ceudah-copy/assets/js/map-dashboard.js?v=" + Date.now());
 
-      // render dashboard
-      initDashboard(allData);
+        // render dashboard
+        initDashboard(allData);
 
-    } else if (segments(1) === "halaman" || segments(1) === "berita") {
-      // --- fallback ke konten CMS ---
-      const jsonUrl = '/json' + cleanSlash(window.location.pathname) + '.json?mode=origin';
-      fetch(jsonUrl)
-        .then(r => r.json())
-        .then(json => {
-          setTitle(json.judul);
-          $(".judul-berita").html(json.judul);
-          $(".isi-berita").html(json.konten);
-          $(".card").fadeIn();
-        });
+      } else if (segments(1) === "halaman" || segments(1) === "berita") {
+        // --- fallback ke konten CMS ---
+        const jsonUrl = '/json' + cleanSlash(window.location.pathname) + '.json?mode=origin';
+        fetch(jsonUrl)
+          .then(r => r.json())
+          .then(json => {
+            setTitle(json.judul);
+            $(".judul-berita").html(json.judul);
+            $(".isi-berita").html(json.konten);
+            $(".card").fadeIn();
+          });
+      }
+
+    } catch (err) {
+      console.error("❌ Gagal load data API:", err);
     }
-
-  } catch (err) {
-    console.error("❌ Gagal load data API:", err);
-  }
-});
+  });
 </script>
