@@ -307,7 +307,7 @@ function renderCharts(dataJson) {
       plotOptions: {
         bar: { horizontal: true, borderRadius: 4, distributed: true },
       },
-      colors: arr.map(() => "#43A047"),
+      colors: arr.map((d) => window.kecamatanColors[d.kec] || "#43A047"),
       series: [{ name: "Luas Panen", data: arr.map((d) => d.luas) }],
       xaxis: {
         categories: arr.map((d) => d.kec),
@@ -324,7 +324,7 @@ function renderCharts(dataJson) {
 }
 
 // ================================
-// CHART: PRODUKSI
+// CHART: PRODUKSI per KECAMATAN (VERTIKAL)
 // ================================
 function renderProduksiChart(filtered) {
   const el = document.querySelector("#lineChart");
@@ -332,23 +332,23 @@ function renderProduksiChart(filtered) {
 
   const fokus = filtered.filter((d) => {
     const val = parseNumber(d.produksi || d.nilai || d.jumlah || d.total);
-    return d.kecamatan !== "Aceh Utara" && d.komoditas && val > 0;
+    return d.kecamatan && d.kecamatan !== "Aceh Utara" && val > 0;
   });
 
   const agg = {};
   fokus.forEach((item) => {
-    const nama = (item.komoditas || "").replace(/^produksi\s+/i, "").trim();
+    const nama = (item.kecamatan || "").trim();
     let produksi = parseNumber(item.produksi);
     agg[nama] = (agg[nama] || 0) + produksi;
   });
 
   const arr = Object.entries(agg)
-    .map(([komoditas, total]) => ({
-      komoditas,
+    .map(([kecamatan, total]) => ({
+      kecamatan,
       total: parseFloat(total.toFixed(2)),
     }))
     .sort((a, b) => b.total - a.total)
-    .slice(0, 15);
+    .slice(0, 10); // tampilkan 10 kecamatan dengan produksi tertinggi
 
   if (window.lineChart && typeof window.lineChart.destroy === "function") {
     window.lineChart.destroy();
@@ -356,23 +356,34 @@ function renderProduksiChart(filtered) {
 
   window.lineChart = new ApexCharts(el, {
     chart: { type: "bar", height: 400, toolbar: { show: false } },
-    title: { text: "Produksi Pertanian (Kw)", align: "center" },
+    title: {
+      text: "10 Kecamatan dengan Produksi Pertanian Tertinggi (Kw)",
+      align: "center",
+    },
     series: [{ name: "Produksi (Kw)", data: arr.map((d) => d.total) }],
     xaxis: {
-      categories: arr.map((d) => d.komoditas),
-      title: { text: "Jenis Komoditas" },
+      categories: arr.map((d) => d.kecamatan), // ⬅️ tampilkan nama kecamatan di bawah (X-axis)
+      title: { text: "Nama Kecamatan" },
       labels: { rotate: -30, style: { fontSize: "12px", fontWeight: 500 } },
     },
     yaxis: {
       title: { text: "Jumlah Produksi (Kw)" },
-      labels: { formatter: (val) => formatNumber(val, 0) },
+      labels: { style: { fontSize: "12px", fontWeight: 500 } },
     },
-    dataLabels: { enabled: true, formatter: (val) => formatNumber(val, 0) },
-    plotOptions: { bar: { borderRadius: 4, distributed: true } },
+    plotOptions: {
+      bar: {
+        horizontal: false, // ⬅️ pastikan vertikal
+        borderRadius: 4,
+        distributed: true,
+      },
+    },
+    dataLabels: { enabled: false },
     tooltip: { y: { formatter: (val) => `${formatNumber(val, 2)} Kw` } },
     colors: ["#43A047"],
+    legend: { show: false },
     noData: { text: "Tidak ada data produksi" },
   });
+
   window.lineChart.render();
 }
 

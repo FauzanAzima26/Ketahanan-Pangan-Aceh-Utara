@@ -67,14 +67,23 @@
       }
 
       // === 2️⃣ Ambil data paralel dari semua API BPS ===
+      // === 2️⃣ Ambil data paralel dari semua API BPS ===
       const urlList = {
         2024: "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2024/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
         2023: "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2023/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
         2022: "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2022/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
         2021: "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2021/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
         2020: "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2020/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
+        produksi2021:
+          "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2021/id_tabel/eHEwRmg2VUZjY2lWNWNYaVhQK1h4QT09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
         produksi2020:
           "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2020/id_tabel/eHEwRmg2VUZjY2lWNWNYaVhQK1h4QT09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
+        produksi2022:
+          "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2022/id_tabel/eHEwRmg2VUZjY2lWNWNYaVhQK1h4QT09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
+        produksi2023:
+          "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2023/id_tabel/eHEwRmg2VUZjY2lWNWNYaVhQK1h4QT09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
+        produksi2024:
+          "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2024/id_tabel/eHEwRmg2VUZjY2lWNWNYaVhQK1h4QT09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
       };
 
       const results = await Promise.all(
@@ -128,22 +137,24 @@
             }
 
             let luas = 0;
-if (rawVal != null) {
-  // ubah jadi format angka mentah tanpa kehilangan ribuan
-  let valStr = String(rawVal).trim().replace(/[^\d,.-]/g, "");
-  // ganti semua titik (sebagai pemisah ribuan) → hapus
-  valStr = valStr.replace(/\./g, "");
-  // lalu ubah koma jadi titik (jika ada desimal)
-  valStr = valStr.replace(",", ".");
-  luas = parseFloat(valStr) || 0;
-}
+            if (rawVal != null) {
+              // ubah jadi format angka mentah tanpa kehilangan ribuan
+              let valStr = String(rawVal)
+                .trim()
+                .replace(/[^\d,.-]/g, "");
+              // ganti semua titik (sebagai pemisah ribuan) → hapus
+              valStr = valStr.replace(/\./g, "");
+              // lalu ubah koma jadi titik (jika ada desimal)
+              valStr = valStr.replace(",", ".");
+              luas = parseFloat(valStr) || 0;
+            }
 
             // Konversi m² ke Ha
             if ((meta.satuan || "").toLowerCase().includes("m<sup>2"))
               luas = luas / 10000;
 
             // Tentukan field output berdasarkan jenis tabel
-            if (key === "produksi2020") {
+            if (key.startsWith("produksi")) {
               dataParsed.push({
                 kecamatan: namaKec,
                 komoditas: komoditas,
@@ -291,20 +302,32 @@ if (rawVal != null) {
   </div>
 </div>
 
-<!-- 📈 LINE CHART: Tren Produksi Panen -->
+<!-- 📊 DUA CHART BERDAMPINGAN -->
 <div class="row mb-3">
-  <div class="col-lg-12 d-flex">
-    <div class="card shadow-sm flex-fill">
+  <!-- Chart 1 -->
+  <div class="col-lg-6 d-flex mb-3 mb-lg-0">
+    <div class="card shadow-sm flex-fill w-100">
       <div class="card-header text-center fw-bold">
-        <strong>Tren Luas Panen per Tahun</strong>
+        <strong>Produksi Pertanian (Kw)</strong>
       </div>
       <div class="card-body">
         <div id="lineChart" style="height: 400px"></div>
       </div>
     </div>
   </div>
-</div>
-`);
+
+  <!-- Chart 2 -->
+  <div class="col-lg-6 d-flex">
+    <div class="card shadow-sm flex-fill w-100">
+      <div class="card-header text-center fw-bold">
+        <strong>Tren Luas Panen per Tahun</strong>
+      </div>
+      <div class="card-body">
+        <div id="#" style="height: 400px"></div>
+      </div>
+    </div>
+  </div>
+</div>`);
         $(".card").fadeIn();
 
         // load chart lib
