@@ -1,0 +1,121 @@
+<!-- 🔍 FILTER -->
+<div class="card shadow-sm mb-3">
+  <div class="card-body">
+    <div class="row g-3 align-items-center">
+      <div class="col-md-4">
+        <label class="form-label fw-semibold"><strong>Kecamatan</strong></label>
+        <select class="form-select custom-select" id="filterKecamatan">
+          <option value="">-- Semua Kecamatan --</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label fw-semibold"><strong>Komoditas</strong></label>
+        <select class="form-select custom-select" id="filterKomoditas">
+          <option value="">-- Semua Komoditas --</option>
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label fw-semibold"><strong>Tahun</strong></label>
+        <select class="form-select custom-select" id="filterTahun">
+          <option value="">-- Semua Tahun --</option>
+        </select>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 📌 RINGKASAN KPI -->
+<div class="row mb-3 text-center">
+  <div class="col-md-3">
+    <div class="kpi-card orange">
+      <span id="totalLuas" class="card-value">0</span><small> Ha</small><br />
+      <span class="card-text"><strong>Total Luas Panen</strong></span>
+      <i class="fas fa-seedling icon"></i>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="kpi-card purple">
+      <span id="hargaRata" class="card-value">0</span><small> Rp/kg</small
+      ><br />
+      <span class="card-text"><strong>Harga Rata-rata</strong></span>
+      <i class="fas fa-coins icon"></i>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="kpi-card grey-dark">
+      <span id="kecTerluas" class="card-value">-</span><br />
+      <span class="card-text"><strong>Kecamatan Terluas</strong></span>
+      <i class="fas fa-map-marker-alt icon"></i>
+    </div>
+  </div>
+  <div class="col-md-3">
+    <div class="kpi-card red">
+      <span id="komTerluas" class="card-value">-</span><br />
+      <span class="card-text"><strong>Komoditas Terluas</strong></span>
+      <i class="fas fa-leaf icon"></i>
+    </div>
+  </div>
+</div>
+
+<!-- 🗺️ PETA & GRAFIK -->
+<div class="row mb-3">
+  <div class="col-lg-6 d-flex">
+    <div class="card shadow-sm flex-fill">
+      <div class="card-header text-center fw-bold">
+        <strong>Luas Panen</strong>
+      </div>
+      <div class="card-body">
+        <div id="horizontalBarChart" style="height: 400px"></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6 d-flex">
+    <div class="card shadow-sm flex-fill">
+      <div class="card-header text-center fw-bold">
+        <strong>Peta Kabupaten</strong>
+      </div>
+      <div class="card-body">
+        <div id="mapContainer" style="height: 400px"></div>
+        <div id="mapLegend" class="mt-2"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 📊 PIE & Treemap -->
+<div class="row mb-3">
+  <div class="col-lg-6 d-flex">
+    <div class="card shadow-sm flex-fill">
+      <div class="card-header text-center fw-bold">
+        <strong>Distribusi Luas Panen Tanaman Pokok</strong>
+      </div>
+      <div class="card-body d-flex justify-content-center align-items-center">
+        <div id="pieChart" style="height: 400px"></div>
+      </div>
+    </div>
+  </div>
+  <div class="col-lg-6 d-flex">
+    <div class="card shadow-sm flex-fill">
+      <div class="card-header text-center fw-bold">
+        <strong>Distribusi Luas Panen Sayuran & Buah-buahan</strong>
+      </div>
+      <div class="card-body d-flex justify-content-center align-items-center">
+        <div id="sayurBuahChart" style="height: 400px"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 📈 LINE CHART: Tren Produksi Panen -->
+<div class="row mb-3">
+  <div class="col-lg-12 d-flex">
+    <div class="card shadow-sm flex-fill">
+      <div class="card-header text-center fw-bold">
+        <strong>Tren Luas Panen per Tahun</strong>
+      </div>
+      <div class="card-body">
+        <div id="lineChart" style="height: 400px"></div>
+      </div>
+    </div>
+  </div>
+</div>

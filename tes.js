@@ -16,6 +16,7 @@ function truncate4(num) {
   if (num == null || isNaN(num)) return 0;
   return Number(num.toFixed(4));
 }
+
 function formatNumber(num, decimals = 2) {
   if (num == null || isNaN(num)) return "0,00";
   return Number(num).toLocaleString("id-ID", {
@@ -23,20 +24,31 @@ function formatNumber(num, decimals = 2) {
     maximumFractionDigits: decimals,
   });
 }
+
 function parseNumber(val) {
   if (val == null) return 0;
   let str = String(val).trim();
+
   if (str === "" || str === "-") return 0;
-  str = str.replace(/,/g, ".");
-  const dotCount = (str.match(/\./g) || []).length;
-  if (dotCount === 0) return parseFloat(str) || 0;
-  if (dotCount === 1) {
-    const [intPart, fracPart = ""] = str.split(".");
-    if (fracPart.length === 3) return parseFloat(intPart + fracPart) || 0;
-    return parseFloat(str) || 0;
+
+  // hapus semua spasi & karakter non-digit kecuali , dan .
+  str = str.replace(/[^\d.,-]/g, "");
+
+  // deteksi pola umum Indonesia/Eropa
+  if (str.includes(",") && str.includes(".")) {
+    str = str.replace(/\./g, "").replace(",", ".");
+  } else if (str.includes(",") && !str.includes(".")) {
+    str = str.replace(",", ".");
+  } else if (str.includes(".")) {
+    const parts = str.split(".");
+    if (parts.length === 2 && parts[1].length === 3) {
+      str = parts.join("");
+    }
   }
-  return parseFloat(str.replace(/\./g, "")) || 0;
+
+  return parseFloat(str) || 0;
 }
+
 function normalizeLuas(item, forChart = false) {
   let val = parseNumber(item.value ?? item.value_raw ?? item.luas);
   const satuan = (item.satuan || "").toLowerCase();
@@ -52,12 +64,10 @@ function normalizeLuas(item, forChart = false) {
 function classifyKategori(komoditas) {
   const nama = (komoditas || "").toLowerCase();
 
-  // tanaman pokok
   if (["padi", "jagung", "kedelai"].some((k) => nama.includes(k))) {
     return "Pokok";
   }
 
-  // sayuran
   if (
     [
       "cabai",
@@ -86,7 +96,6 @@ function classifyKategori(komoditas) {
     return "Sayuran";
   }
 
-  // buah
   if (
     [
       "melon",
@@ -109,7 +118,6 @@ function classifyKategori(komoditas) {
     return "Buah";
   }
 
-  // jamur
   if (["jamur"].some((k) => nama.includes(k))) {
     return "Jamur";
   }
@@ -118,19 +126,16 @@ function classifyKategori(komoditas) {
 }
 
 // ================================
-// TREEMAP: SAYUR, BUAH, JAMUR (Top 10 + Lainnya)
+// TREEMAP: SAYUR, BUAH, JAMUR
 // ================================
 function renderSayurBuahChart(filtered) {
   const el = document.querySelector("#sayurBuahChart");
   if (!el) return;
 
-  // ❌ data total Aceh Utara jangan ikut
   const fokus = filtered.filter(
     (item) =>
       item.kecamatan !== "Aceh Utara" &&
-      (item.kategori === "Sayuran" ||
-        item.kategori === "Buah" ||
-        item.kategori === "Jamur")
+      ["Sayuran", "Buah", "Jamur"].includes(item.kategori)
   );
 
   const agg = {};
@@ -140,9 +145,7 @@ function renderSayurBuahChart(filtered) {
     agg[item.komoditas] = (agg[item.komoditas] || 0) + luas;
   });
 
-  // urutkan dari terbesar
   const sorted = Object.entries(agg).sort((a, b) => b[1] - a[1]);
-
   const topN = 10;
   const topData = sorted.slice(0, topN);
   const others = sorted.slice(topN);
@@ -154,15 +157,15 @@ function renderSayurBuahChart(filtered) {
     })),
     ...(others.length > 0
       ? [
-        {
-          x: "Lainnya",
-          y: truncate4(others.reduce((sum, [, luas]) => sum + luas, 0)),
-          detail: others.map(([komoditas, luas]) => ({
-            name: komoditas,
-            value: luas,
-          })),
-        },
-      ]
+          {
+            x: "Lainnya",
+            y: truncate4(others.reduce((sum, [, luas]) => sum + luas, 0)),
+            detail: others.map(([komoditas, luas]) => ({
+              name: komoditas,
+              value: luas,
+            })),
+          },
+        ]
       : []),
   ];
 
@@ -175,17 +178,13 @@ function renderSayurBuahChart(filtered) {
       toolbar: { show: false },
     },
     series: [{ data: series }],
-    plotOptions: {
-      treemap: {
-        distributed: true,
-      },
-    },
+    plotOptions: { treemap: { distributed: true } },
     tooltip: {
       y: {
         formatter: function (val, opts) {
-          const dataPoint = opts.w.config.series[0].data[opts.dataPointIndex];
-          if (dataPoint.x === "Lainnya" && dataPoint.detail) {
-            return dataPoint.detail
+          const dp = opts.w.config.series[0].data[opts.dataPointIndex];
+          if (dp.x === "Lainnya" && dp.detail) {
+            return dp.detail
               .map((d) => `${d.name}: ${formatNumber(d.value, 2)} Ha`)
               .join("<br>");
           }
@@ -206,13 +205,11 @@ function renderCharts(dataJson) {
   if (!dataJson) return;
   const filteredData = dataJson.filter((d) => d.kecamatan !== "Aceh Utara");
 
-  // PIE → tanaman pokok
-  // PIE → tanaman pokok (perbaikan format ribuan di label tengah)
+  // PIE: Tanaman Pokok
   const pieEl = document.querySelector("#pieChart");
   if (pieEl) {
-    // Agg dengan map untuk menjaga casing label yang rapi
     const agg = {};
-    const labelMap = {}; // keyLower -> displayLabel
+    const labelMap = {};
 
     filteredData
       .filter((item) => item.kategori === "Pokok")
@@ -221,16 +218,13 @@ function renderCharts(dataJson) {
         if (luas <= 0) return;
         const raw = (item.komoditas || "").trim();
         const key = raw.toLowerCase();
-        // simpan label yang rapi (Title Case) pada kali pertama muncul
         if (!labelMap[key]) {
-          labelMap[key] = raw
-            ? raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase()
-            : raw;
+          labelMap[key] =
+            raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
         }
         agg[key] = (agg[key] || 0) + luas;
       });
 
-    // ubah ke array agar order konsisten dan kita dapat labels + series
     const entries = Object.entries(agg).map(([k, v]) => ({
       label: labelMap[k] || k,
       value: truncate4(v),
@@ -250,15 +244,10 @@ function renderCharts(dataJson) {
             size: "65%",
             labels: {
               show: true,
-              name: {
-                show: true,
-                formatter: (val) => val, // nama tetap tampil apa adanya
-              },
+              name: { show: true },
               value: {
                 show: true,
-                // <-- INI PENTING: formatkan nilai (pakai formatNumber dengan 0 desimal)
                 formatter: (val) => {
-                  // val bisa jadi string atau number, pastikan angka dulu:
                   const num = parseFloat(String(val).replace(/,/g, ""));
                   return isNaN(num) ? "0" : formatNumber(num, 0);
                 },
@@ -266,8 +255,8 @@ function renderCharts(dataJson) {
               total: {
                 show: true,
                 label: "Total",
-                formatter: (w) => {
-                  const total = w.globals.seriesTotals.reduce(
+                formatter: function (w) {
+                  const total = (w?.globals?.seriesTotals || []).reduce(
                     (a, b) => a + b,
                     0
                   );
@@ -281,12 +270,11 @@ function renderCharts(dataJson) {
       tooltip: {
         y: {
           formatter: (val, opts) => {
-            const total = opts.w.globals.seriesTotals.reduce(
+            const total = (opts?.w?.globals?.seriesTotals || []).reduce(
               (a, b) => a + b,
               0
             );
-            if (total <= 0) return `${formatNumber(val, 2)} Ha (0%)`;
-            const pct = ((val / total) * 100).toFixed(2);
+            const pct = total ? ((val / total) * 100).toFixed(2) : 0;
             return `${formatNumber(val, 2)} Ha (${pct}%)`;
           },
         },
@@ -294,11 +282,10 @@ function renderCharts(dataJson) {
       legend: { show: true, position: "bottom" },
       noData: { text: "Tidak ada data" },
     });
-
     pieChart.render();
   }
 
-  // BAR → top 10 kecamatan
+  // BAR: Top 10 Kecamatan
   const barEl = document.querySelector("#horizontalBarChart");
   if (barEl) {
     const agg = {};
@@ -314,44 +301,13 @@ function renderCharts(dataJson) {
     arr.sort((a, b) => b.luas - a.luas);
     arr = arr.slice(0, 10);
 
-    // 🔹 Ambil warna dari peta (myMap)
-    const regionScale = window.myMap?.series?.regions?.[0]?.params?.scale || {};
-    const regionValues = window.myMap?.series?.regions?.[0]?.values || {};
-    const kecColorMap = {};
-
-    // Buat mapping nama kecamatan → warna di peta
-    Object.entries(window.kecamatanNames || {}).forEach(([id, nama]) => {
-      let color;
-      const val = regionValues[id];
-
-      if (typeof val === "string" && val.startsWith("#")) {
-        // nilai sudah berupa warna
-        color = val;
-      } else if (regionScale && val in regionScale) {
-        color = regionScale[val];
-      }
-
-      if (nama && color) kecColorMap[nama] = color;
-    });
-
     if (barChart) barChart.destroy();
-    const barColors = arr.map((d) => {
-      const key = Object.keys(window.kecamatanColors || {}).find(
-        (k) => k.trim().toLowerCase() === d.kec.trim().toLowerCase()
-      );
-      return key ? window.kecamatanColors[key] : "#bdbdbd";
-    });
     barChart = new ApexCharts(barEl, {
       chart: { type: "bar", height: 400 },
       plotOptions: {
-        bar: {
-          horizontal: true,
-          distributed: true,
-          borderRadius: 4,
-          dataLabels: { position: "center" },
-        },
+        bar: { horizontal: true, borderRadius: 4, distributed: true },
       },
-      colors: barColors, // ✅ warna diambil dari peta
+      colors: arr.map(() => "#43A047"),
       series: [{ name: "Luas Panen", data: arr.map((d) => d.luas) }],
       xaxis: {
         categories: arr.map((d) => d.kec),
@@ -359,17 +315,65 @@ function renderCharts(dataJson) {
       },
       yaxis: { title: { text: "Kecamatan" } },
       dataLabels: { enabled: true, formatter: (val) => formatNumber(val, 2) },
+      tooltip: { y: { formatter: (val) => `${formatNumber(val, 2)} Ha` } },
       legend: { show: false },
       noData: { text: "Tidak ada data" },
-      tooltip: {
-        y: {
-          formatter: (val) => `${formatNumber(val, 2)} Ha`,
-          title: { formatter: () => "Luas Panen" },
-        },
-      },
     });
     barChart.render();
   }
+}
+
+// ================================
+// CHART: PRODUKSI
+// ================================
+function renderProduksiChart(filtered) {
+  const el = document.querySelector("#lineChart");
+  if (!el) return;
+
+  const fokus = filtered.filter((d) => {
+    const val = parseNumber(d.produksi || d.nilai || d.jumlah || d.total);
+    return d.kecamatan !== "Aceh Utara" && d.komoditas && val > 0;
+  });
+
+  const agg = {};
+  fokus.forEach((item) => {
+    const nama = (item.komoditas || "").replace(/^produksi\s+/i, "").trim();
+    let produksi = parseNumber(item.produksi);
+    agg[nama] = (agg[nama] || 0) + produksi;
+  });
+
+  const arr = Object.entries(agg)
+    .map(([komoditas, total]) => ({
+      komoditas,
+      total: parseFloat(total.toFixed(2)),
+    }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 15);
+
+  if (window.lineChart && typeof window.lineChart.destroy === "function") {
+    window.lineChart.destroy();
+  }
+
+  window.lineChart = new ApexCharts(el, {
+    chart: { type: "bar", height: 400, toolbar: { show: false } },
+    title: { text: "Produksi Pertanian (Kw)", align: "center" },
+    series: [{ name: "Produksi (Kw)", data: arr.map((d) => d.total) }],
+    xaxis: {
+      categories: arr.map((d) => d.komoditas),
+      title: { text: "Jenis Komoditas" },
+      labels: { rotate: -30, style: { fontSize: "12px", fontWeight: 500 } },
+    },
+    yaxis: {
+      title: { text: "Jumlah Produksi (Kw)" },
+      labels: { formatter: (val) => formatNumber(val, 0) },
+    },
+    dataLabels: { enabled: true, formatter: (val) => formatNumber(val, 0) },
+    plotOptions: { bar: { borderRadius: 4, distributed: true } },
+    tooltip: { y: { formatter: (val) => `${formatNumber(val, 2)} Kw` } },
+    colors: ["#43A047"],
+    noData: { text: "Tidak ada data produksi" },
+  });
+  window.lineChart.render();
 }
 
 // ================================
@@ -411,12 +415,10 @@ function updateKPI(filtered, allData) {
 window.initDashboard = function (allData) {
   console.log("🔥 initDashboard():", allData.length, "records");
 
-  // isi kategori untuk semua data
   allData.forEach((d) => {
     d.kategori = classifyKategori(d.komoditas);
   });
 
-  // isi dropdown
   function fillSelect(id, values) {
     const el = document.querySelector(id);
     if (!el) return;
@@ -428,6 +430,7 @@ window.initDashboard = function (allData) {
       el.appendChild(opt);
     });
   }
+
   fillSelect(
     "#filterKecamatan",
     new Set(
@@ -457,12 +460,14 @@ window.initDashboard = function (allData) {
 
     updateKPI(filtered, allData);
 
-    // 🔄 renderMap lebih dulu supaya window.kecamatanColors terisi
     if (typeof renderMap === "function") renderMap();
 
-    // baru render chart
     renderCharts(filtered);
     renderSayurBuahChart(filtered);
+
+    const produksiData = filtered.filter((d) => parseFloat(d.produksi) > 0);
+    console.log("📊 Data produksi untuk chart:", produksiData.length);
+    renderProduksiChart(produksiData);
   }
 
   ["#filterKecamatan", "#filterKomoditas", "#filterTahun"].forEach((sel) => {
