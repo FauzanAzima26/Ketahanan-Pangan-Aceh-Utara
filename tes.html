@@ -126,8 +126,14 @@
           for (const kodeVar in vars) {
             if (!kolom[kodeVar]) continue;
             const meta = kolom[kodeVar];
-            let komoditas =
+            let komoditasRaw =
               meta.nama_variabel?.replace(/\(.*?\)/g, "").trim() || "-";
+
+            // 🔧 Hapus awalan “Luas Panen” / “Produksi” biar komoditas gabung
+            let komoditas = komoditasRaw
+              .replace(/^Luas\s*Panen\s*/i, "")
+              .replace(/^Produksi\s*/i, "")
+              .trim();
 
             let rawVal =
               vars[kodeVar]?.value ?? vars[kodeVar]?.v ?? vars[kodeVar] ?? 0;
@@ -138,27 +144,32 @@
                   .replace(/\./g, "")
                   .replace(",", ".")
               ) || 0;
+
             if ((meta.satuan || "").toLowerCase().includes("m<sup>2"))
               val /= 10000;
 
+            // Cari data komoditas yang sudah ada
+            let existing = dataParsed.find(
+              (d) => d.kecamatan === namaKec && d.komoditas === komoditas
+            );
+
+            // Jika belum ada, buat baru
+            if (!existing) {
+              existing = {
+                kecamatan: namaKec,
+                komoditas,
+                tahun,
+                satuan: meta.satuan || "-",
+                sumber,
+              };
+              dataParsed.push(existing);
+            }
+
+            // Masukkan ke kolom luas atau produksi
             if (jenis === "produksi") {
-              dataParsed.push({
-                kecamatan: namaKec,
-                komoditas,
-                produksi: val,
-                tahun,
-                satuan: meta.satuan || "-",
-                sumber,
-              });
+              existing.produksi = (existing.produksi || 0) + val;
             } else {
-              dataParsed.push({
-                kecamatan: namaKec,
-                komoditas,
-                luas: val,
-                tahun,
-                satuan: meta.satuan || "-",
-                sumber,
-              });
+              existing.luas = (existing.luas || 0) + val;
             }
           }
         });
@@ -254,7 +265,7 @@
   <div class="col-lg-6 d-flex">
   <div class="card shadow-sm flex-fill">
     <div class="card-body">
-      <h6 class="text-center fw-bold mb-2">Peta Kabupaten Aceh Utara</h6>
+      <h6 class="text-center fw-bold" style="margin-bottom: 40px">Peta Kabupaten Aceh Utara</h6>
       <div id="mapContainer" style="height: 400px"></div>
       <div id="mapLegend" class="mt-2"></div>
     </div>
@@ -267,7 +278,7 @@
   <div class="col-lg-6 d-flex">
     <div class="card shadow-sm flex-fill">
       <div class="card-body">
-        <h6 class="text-center fw-semibold mb-3">
+        <h6 class="text-center fw-semibold" style="margin-bottom: 20px">
           Luas Panen Tanaman Pokok (Ha)
         </h6>
         <div id="pieChart" style="height: 400px"></div>
