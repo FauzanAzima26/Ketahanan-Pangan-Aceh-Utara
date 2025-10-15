@@ -4,7 +4,7 @@
 let pieChart = null;
 let barChart = null;
 let sayurBuahChart = null;
-let lineChart = null;
+let vertikalBarChart = null;
 let currentPage = 1;
 const rowsPerPage = 20;
 let currentTableData = [];
@@ -326,8 +326,8 @@ function renderCharts(dataJson) {
 // ================================
 // CHART: PRODUKSI per KECAMATAN (VERTIKAL)
 // ================================
-function renderProduksiChart(filtered) {
-  const el = document.querySelector("#lineChart");
+function renderVertikalBarChart(filtered) {
+  const el = document.querySelector("#vertikalBarChart");
   if (!el) return;
 
   const fokus = filtered.filter((d) => {
@@ -350,19 +350,15 @@ function renderProduksiChart(filtered) {
     .sort((a, b) => b.total - a.total)
     .slice(0, 10); // tampilkan 10 kecamatan dengan produksi tertinggi
 
-  if (window.lineChart && typeof window.lineChart.destroy === "function") {
-    window.lineChart.destroy();
+  if (vertikalBarChart && typeof vertikalBarChart.destroy === "function") {
+    vertikalBarChart.destroy();
   }
 
-  window.lineChart = new ApexCharts(el, {
+  vertikalBarChart = new ApexCharts(el, {
     chart: { type: "bar", height: 400, toolbar: { show: false } },
-    title: {
-      text: "10 Kecamatan dengan Produksi Pertanian Tertinggi (Kw)",
-      align: "center",
-    },
     series: [{ name: "Produksi (Kw)", data: arr.map((d) => d.total) }],
     xaxis: {
-      categories: arr.map((d) => d.kecamatan), // ⬅️ tampilkan nama kecamatan di bawah (X-axis)
+      categories: arr.map((d) => d.kecamatan),
       title: { text: "Nama Kecamatan" },
       labels: { rotate: -30, style: { fontSize: "12px", fontWeight: 500 } },
     },
@@ -372,19 +368,19 @@ function renderProduksiChart(filtered) {
     },
     plotOptions: {
       bar: {
-        horizontal: false, // ⬅️ pastikan vertikal
+        horizontal: false,
         borderRadius: 4,
         distributed: true,
       },
     },
     dataLabels: { enabled: false },
     tooltip: { y: { formatter: (val) => `${formatNumber(val, 2)} Kw` } },
-    colors: ["#43A047"],
+    colors: arr.map((d) => window.kecamatanColors?.[d.kecamatan] || "#43A047"),
     legend: { show: false },
     noData: { text: "Tidak ada data produksi" },
   });
 
-  window.lineChart.render();
+  vertikalBarChart.render();
 }
 
 // ================================
@@ -478,7 +474,7 @@ window.initDashboard = function (allData) {
 
     const produksiData = filtered.filter((d) => parseFloat(d.produksi) > 0);
     console.log("📊 Data produksi untuk chart:", produksiData.length);
-    renderProduksiChart(produksiData);
+    renderVertikalBarChart(produksiData);
   }
 
   ["#filterKecamatan", "#filterKomoditas", "#filterTahun"].forEach((sel) => {

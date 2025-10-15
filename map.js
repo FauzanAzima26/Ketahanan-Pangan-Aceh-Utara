@@ -5,11 +5,33 @@ function renderMap() {
 
   /// 27 warna cerah bervariasi
   window.colors = [
-    "#e6194b", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4",
-    "#46f0f0", "#f032e6", "#bcf60c", "#fabebe", "#008080", "#e6beff",
-    "#9a6324", "#fffac8", "#800000", "#aaffc3", "#808000", "#ffd8b1",
-    "#000075", "#808080", "#ff7f50", "#40e0d0", "#ff69b4", "#6495ed",
-    "#dda0dd", "#7fff00", "#dc143c"
+    "#e6194b",
+    "#3cb44b",
+    "#ffe119",
+    "#4363d8",
+    "#f58231",
+    "#911eb4",
+    "#46f0f0",
+    "#f032e6",
+    "#bcf60c",
+    "#fabebe",
+    "#008080",
+    "#e6beff",
+    "#9a6324",
+    "#fffac8",
+    "#800000",
+    "#aaffc3",
+    "#808000",
+    "#ffd8b1",
+    "#000075",
+    "#808080",
+    "#ff7f50",
+    "#40e0d0",
+    "#ff69b4",
+    "#6495ed",
+    "#dda0dd",
+    "#7fff00",
+    "#dc143c",
   ];
 
   // Buat object scale {1: warna1, 2: warna2, ...}
@@ -46,7 +68,7 @@ function renderMap() {
     "11.08_kecamatan_path_23": "Pirak Timur",
     "11.08_kecamatan_path_24": "Geuredong Pase",
     "11.08_kecamatan_path_25": "Banda Baro",
-    "11.08_kecamatan_path_26": "Nisam Antara"
+    "11.08_kecamatan_path_26": "Nisam Antara",
   };
 
   // Render map
@@ -59,14 +81,12 @@ function renderMap() {
       selected: { fill: "#0277bd" },
     },
     series: {
-      regions: [
-        { attribute: "fill", scale: scale, values: {} }
-      ],
+      regions: [{ attribute: "fill", scale: scale, values: {} }],
     },
     onRegionClick(event, code) {
       const nama = window.kecamatanNames[code] || code;
       console.log("Klik kecamatan:", nama);
-    }
+    },
   });
 
   // Ambil semua region ID
@@ -81,13 +101,13 @@ function renderMap() {
   window.myMap.series.regions[0].setValues(values);
 
   // === Simpan mapping nama kecamatan → warna global (agar chart bisa pakai) ===
-window.kecamatanColors = {};
-regionIds.forEach((id, i) => {
-  const nama = window.kecamatanNames[id];
-  const warna = window.colors[i % window.colors.length];
-  if (nama) window.kecamatanColors[nama] = warna;
-});
-console.log("✅ Mapping warna kecamatan:", window.kecamatanColors);
+  window.kecamatanColors = {};
+  regionIds.forEach((id, i) => {
+    const nama = window.kecamatanNames[id];
+    const warna = window.colors[i % window.colors.length];
+    if (nama) window.kecamatanColors[nama] = warna;
+  });
+  console.log("✅ Mapping warna kecamatan:", window.kecamatanColors);
 
   // ==== Bikin legend di bawah map ====
   const legendContainer = document.getElementById("mapLegend");
@@ -98,14 +118,16 @@ console.log("✅ Mapping warna kecamatan:", window.kecamatanColors);
     item.className = "legend-item";
     const nama = window.kecamatanNames[id] || id;
     item.innerHTML = `
-      <div class="legend-color" style="background:${window.colors[i % window.colors.length]}"></div>
+      <div class="legend-color" style="background:${
+        window.colors[i % window.colors.length]
+      }"></div>
       <span>${nama}</span>
     `;
     legendContainer.appendChild(item);
   });
 
   console.log("Daftar ID kecamatan:", regionIds);
-// === Tambahan agar dashboard tahu map sudah siap ===
+  // === Tambahan agar dashboard tahu map sudah siap ===
   window.mapReady = true;
   window.dispatchEvent(new Event("mapReady"));
 }

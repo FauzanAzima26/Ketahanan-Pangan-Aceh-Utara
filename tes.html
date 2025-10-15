@@ -257,45 +257,43 @@
 <div class="row mb-3">
   <div class="col-lg-6 d-flex">
     <div class="card shadow-sm flex-fill">
-      <div class="card-header text-center fw-bold">
-        <strong>Luas Panen</strong>
-      </div>
       <div class="card-body">
+        <h6 class="text-center fw-semibold mb-3">
+          10 Kecamatan dengan Produksi Luas Panen Tertinggi (Ha)
+        </h6>
         <div id="horizontalBarChart" style="height: 400px"></div>
       </div>
     </div>
   </div>
   <div class="col-lg-6 d-flex">
-    <div class="card shadow-sm flex-fill">
-      <div class="card-header text-center fw-bold">
-        <strong>Peta Kabupaten</strong>
-      </div>
-      <div class="card-body">
-        <div id="mapContainer" style="height: 400px"></div>
-        <div id="mapLegend" class="mt-2"></div>
-      </div>
+  <div class="card shadow-sm flex-fill">
+    <div class="card-body">
+      <h6 class="text-center fw-bold mb-2">Peta Kabupaten Aceh Utara</h6>
+      <div id="mapContainer" style="height: 400px"></div>
+      <div id="mapLegend" class="mt-2"></div>
     </div>
   </div>
+</div>
 </div>
 
 <!-- 📊 PIE & Treemap -->
 <div class="row mb-3">
   <div class="col-lg-6 d-flex">
     <div class="card shadow-sm flex-fill">
-      <div class="card-header text-center fw-bold">
-        <strong>Distribusi Luas Panen Tanaman Pokok</strong>
-      </div>
-      <div class="card-body d-flex justify-content-center align-items-center">
+      <div class="card-body">
+        <h6 class="text-center fw-semibold mb-3">
+          Luas Panen Tanaman Pokok (Ha)
+        </h6>
         <div id="pieChart" style="height: 400px"></div>
       </div>
     </div>
   </div>
   <div class="col-lg-6 d-flex">
     <div class="card shadow-sm flex-fill">
-      <div class="card-header text-center fw-bold">
-        <strong>Distribusi Luas Panen Sayuran & Buah-buahan</strong>
-      </div>
-      <div class="card-body d-flex justify-content-center align-items-center">
+      <div class="card-body">
+        <h6 class="text-center fw-semibold mb-3">
+          Luas panen Sayuran dan Buah-Buahan
+        </h6>
         <div id="sayurBuahChart" style="height: 400px"></div>
       </div>
     </div>
@@ -307,11 +305,11 @@
   <!-- Chart 1 -->
   <div class="col-lg-6 d-flex mb-3 mb-lg-0">
     <div class="card shadow-sm flex-fill w-100">
-      <div class="card-header text-center fw-bold">
-        <strong>Produksi Pertanian (Kw)</strong>
-      </div>
       <div class="card-body">
-        <div id="lineChart" style="height: 400px"></div>
+        <h6 class="text-center fw-semibold mb-3">
+          10 Kecamatan dengan Produksi Pertanian Tertinggi (Kw)
+        </h6>
+        <div id="vertikalBarChart" style="height: 400px"></div>
       </div>
     </div>
   </div>
@@ -319,13 +317,15 @@
   <!-- Chart 2 -->
   <div class="col-lg-6 d-flex">
     <div class="card shadow-sm flex-fill w-100">
-      <div class="card-header text-center fw-bold">
-        <strong>Tren Luas Panen per Tahun</strong>
-      </div>
       <div class="card-body">
+        <h6 class="text-center fw-semibold mb-3">
+          Tren Luas Panen per Tahun
+        </h6>
         <div id="#" style="height: 400px"></div>
       </div>
     </div>
+  </div>
+</div>
   </div>
 </div>`);
         $(".card").fadeIn();
