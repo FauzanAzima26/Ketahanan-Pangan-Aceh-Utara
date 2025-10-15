@@ -66,43 +66,56 @@
         allData = allData.concat(dataSatuData);
       }
 
-      // === 2️⃣ Ambil data paralel dari semua API BPS ===
-      // === 2️⃣ Ambil data paralel dari semua API BPS ===
-      const urlList = {
-        2024: "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2024/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
-        2023: "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2023/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
-        2022: "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2022/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
-        2021: "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2021/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
-        2020: "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2020/id_tabel/bXNVb1pmZndqUDhKWElUSjhZRitidz09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
-        produksi2021:
-          "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2021/id_tabel/eHEwRmg2VUZjY2lWNWNYaVhQK1h4QT09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
-        produksi2020:
-          "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2020/id_tabel/eHEwRmg2VUZjY2lWNWNYaVhQK1h4QT09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
-        produksi2022:
-          "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2022/id_tabel/eHEwRmg2VUZjY2lWNWNYaVhQK1h4QT09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
-        produksi2023:
-          "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2023/id_tabel/eHEwRmg2VUZjY2lWNWNYaVhQK1h4QT09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
-        produksi2024:
-          "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25/tahun/2024/id_tabel/eHEwRmg2VUZjY2lWNWNYaVhQK1h4QT09/wilayah/1111000/key/9a994cbfdcba3e84dbe9eceba615a65f",
-      };
-
-      const results = await Promise.all(
-        Object.entries(urlList).map(([key, url]) =>
-          fetch(url)
-            .then((r) => r.json().catch(() => null))
-            .then((j) => ({ key, json: j }))
-        )
+      // Tahun dinamis (misal 2020 s.d. tahun sekarang)
+      const currentYear = new Date().getFullYear();
+      const startYear = 2020;
+      const years = Array.from(
+        { length: currentYear - startYear + 1 },
+        (_, i) => startYear + i
       );
 
-      for (const { key, json } of results) {
-        if (!json || !json.data || !json.data[1]) continue;
+      // Template endpoint
+      const baseURL =
+        "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25";
+      const wilayah = "1111000";
+      const key = "9a994cbfdcba3e84dbe9eceba615a65f";
 
+      // ID tabel untuk luas dan produksi
+      const idTabelLuas = "bXNVb1pmZndqUDhKWElUSjhZRitidz09";
+      const idTabelProduksi = "eHEwRmg2VUZjY2lWNWNYaVhQK1h4QT09";
+
+      // 🔹 Buat dua kelompok URL dinamis
+      const urls = {
+        luas: years.map(
+          (y) =>
+            `${baseURL}/tahun/${y}/id_tabel/${idTabelLuas}/wilayah/${wilayah}/key/${key}`
+        ),
+        produksi: years.map(
+          (y) =>
+            `${baseURL}/tahun/${y}/id_tabel/${idTabelProduksi}/wilayah/${wilayah}/key/${key}`
+        ),
+      };
+
+      const results = await Promise.all([
+        // gabungkan luas + produksi
+        ...urls.luas.map((url, i) =>
+          fetch(url)
+            .then((r) => r.json().catch(() => null))
+            .then((j) => ({ jenis: "luas", tahun: years[i], json: j }))
+        ),
+        ...urls.produksi.map((url, i) =>
+          fetch(url)
+            .then((r) => r.json().catch(() => null))
+            .then((j) => ({ jenis: "produksi", tahun: years[i], json: j }))
+        ),
+      ]);
+
+      for (const { jenis, tahun, json } of results) {
+        if (!json || !json.data || !json.data[1]) continue;
         const tabel = json.data[1];
         const rows = tabel.data || [];
         const kolom = tabel.kolom || {};
-        const tahun = tabel.tahun_data || key;
-        const sumber =
-          key === "produksi2020" ? "Produksi 2020" : `BPS ${tahun}`;
+        const sumber = `BPS ${tahun} (${jenis})`;
 
         const dataParsed = [];
 
@@ -113,70 +126,43 @@
           for (const kodeVar in vars) {
             if (!kolom[kodeVar]) continue;
             const meta = kolom[kodeVar];
+            let komoditas =
+              meta.nama_variabel?.replace(/\(.*?\)/g, "").trim() || "-";
 
-            // Normalisasi nama komoditas
-            let komoditasRaw = (meta.nama_variabel || "-").toString().trim();
-            let komoditas = komoditasRaw
-              .replace(/luas panen\s*/i, "")
-              .replace(/\(.*?\)/g, "")
-              .replace(/\bha\b/i, "")
-              .trim();
-            if (!komoditas) komoditas = komoditasRaw;
-
-            // Ambil nilai
-            let rawVal = vars[kodeVar];
-            if (rawVal && typeof rawVal === "object") {
-              if (rawVal.value != null) rawVal = rawVal.value;
-              else if (rawVal.v != null) rawVal = rawVal.v;
-              else {
-                const maybeNum = Object.values(rawVal).find(
-                  (v) => typeof v === "number" || v
-                );
-                rawVal = maybeNum ?? 0;
-              }
-            }
-
-            let luas = 0;
-            if (rawVal != null) {
-              // ubah jadi format angka mentah tanpa kehilangan ribuan
-              let valStr = String(rawVal)
-                .trim()
-                .replace(/[^\d,.-]/g, "");
-              // ganti semua titik (sebagai pemisah ribuan) → hapus
-              valStr = valStr.replace(/\./g, "");
-              // lalu ubah koma jadi titik (jika ada desimal)
-              valStr = valStr.replace(",", ".");
-              luas = parseFloat(valStr) || 0;
-            }
-
-            // Konversi m² ke Ha
+            let rawVal =
+              vars[kodeVar]?.value ?? vars[kodeVar]?.v ?? vars[kodeVar] ?? 0;
+            let val =
+              parseFloat(
+                String(rawVal)
+                  .replace(/[^\d.,-]/g, "")
+                  .replace(/\./g, "")
+                  .replace(",", ".")
+              ) || 0;
             if ((meta.satuan || "").toLowerCase().includes("m<sup>2"))
-              luas = luas / 10000;
+              val /= 10000;
 
-            // Tentukan field output berdasarkan jenis tabel
-            if (key.startsWith("produksi")) {
+            if (jenis === "produksi") {
               dataParsed.push({
                 kecamatan: namaKec,
-                komoditas: komoditas,
-                produksi: luas, // gunakan nilai sebagai produksi
-                tahun: tahun,
+                komoditas,
+                produksi: val,
+                tahun,
                 satuan: meta.satuan || "-",
-                sumber: sumber,
+                sumber,
               });
             } else {
               dataParsed.push({
                 kecamatan: namaKec,
-                komoditas: komoditas,
-                luas: luas,
-                tahun: tahun,
+                komoditas,
+                luas: val,
+                tahun,
                 satuan: meta.satuan || "-",
-                sumber: sumber,
+                sumber,
               });
             }
           }
         });
 
-        console.log(`📊 ${sumber}: ${dataParsed.length}`);
         allData = allData.concat(dataParsed);
       }
 
