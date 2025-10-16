@@ -417,6 +417,116 @@ function updateKPI(filtered, allData) {
 }
 
 // ================================
+// STACKED BAR CHART: Produksi 10 Komoditas Teratas per Kecamatan
+// ================================
+function renderStackedBarChartKomoditas(filtered) {
+  const el = document.querySelector("#lineChartKomoditas"); // ganti id jika perlu
+  if (!el) return;
+
+  const years = Array.from(
+    new Set(filtered.map((d) => parseInt(d.tahun)).filter((t) => !isNaN(t)))
+  ).sort((a, b) => a - b);
+
+  if (filtered.length === 0) {
+    el.innerHTML =
+      "<p class='text-center text-muted'>Tidak ada data untuk ditampilkan.</p>";
+    return;
+  }
+
+  // Ambil kecamatan dari dropdown (jika ada)
+  const selectedKecamatan = document.querySelector("#filterKecamatan")?.value;
+  const filteredKec = selectedKecamatan
+    ? filtered.filter((d) => d.kecamatan === selectedKecamatan)
+    : filtered;
+
+  // Hitung total produksi per komoditas (untuk menentukan 10 teratas)
+  const produksiPerKomoditas = {};
+  filteredKec.forEach((d) => {
+    if (!d.komoditas) return;
+    const prod = parseFloat(d.produksi) || 0;
+    produksiPerKomoditas[d.komoditas] =
+      (produksiPerKomoditas[d.komoditas] || 0) + prod;
+  });
+
+  // Ambil 10 komoditas dengan total produksi tertinggi
+  const top10Komoditas = Object.entries(produksiPerKomoditas)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 10)
+    .map(([nama]) => nama);
+
+  // Buat series per tahun (hanya untuk 10 komoditas teratas)
+  const series = years.map((tahun) => {
+    const dataTahun = top10Komoditas.map((komoditas) => {
+      const recs = filteredKec.filter(
+        (d) => d.komoditas === komoditas && parseInt(d.tahun) === tahun
+      );
+      const totalProduksi = recs.reduce(
+        (s, r) => s + (parseFloat(r.produksi) || 0),
+        0
+      );
+      return truncate4(totalProduksi);
+    });
+    return { name: tahun.toString(), data: dataTahun };
+  });
+
+  // Hancurkan chart lama
+  if (
+    window.stackedBarChartKomoditas &&
+    typeof window.stackedBarChartKomoditas.destroy === "function"
+  ) {
+    window.stackedBarChartKomoditas.destroy();
+  }
+
+  // Ubah judul chart di HTML
+  const titleEl = document.querySelector("#chartKomoditasTitle");
+  if (titleEl) {
+    titleEl.textContent = selectedKecamatan
+      ? `Produksi 10 Komoditas Teratas - ${selectedKecamatan}`
+      : "Produksi 10 Komoditas Teratas per Kecamatan";
+  }
+
+  // Render stacked bar chart baru
+  window.stackedBarChartKomoditas = new ApexCharts(el, {
+    chart: {
+      type: "bar",
+      height: 400,
+      stacked: true,
+      toolbar: { show: false },
+    },
+    series,
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        borderRadius: 4,
+        columnWidth: "55%",
+      },
+    },
+    xaxis: {
+      categories: top10Komoditas,
+      labels: {
+        style: { fontSize: "12px" },
+      },
+    },
+    yaxis: {
+      title: { text: "Produksi (Kwintal)" },
+      labels: {
+        formatter: (val) => formatNumber(val, 0),
+      },
+    },
+    legend: { position: "bottom" },
+    tooltip: {
+      y: {
+        formatter: (val) => `${formatNumber(val, 2)} Kw`,
+      },
+    },
+    fill: { opacity: 0.8 },
+    dataLabels: { enabled: false },
+  });
+
+  window.stackedBarChartKomoditas.render();
+}
+
+// ================================
 // INIT DASHBOARD
 // ================================
 window.initDashboard = function (allData) {
@@ -475,6 +585,7 @@ window.initDashboard = function (allData) {
     const produksiData = filtered.filter((d) => parseFloat(d.produksi) > 0);
     console.log("📊 Data produksi untuk chart:", produksiData.length);
     renderVertikalBarChart(produksiData);
+    renderStackedBarChartKomoditas(filtered);
   }
 
   ["#filterKecamatan", "#filterKomoditas", "#filterTahun"].forEach((sel) => {
