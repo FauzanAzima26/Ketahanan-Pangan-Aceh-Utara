@@ -17,6 +17,34 @@ function truncate4(num) {
   return Number(num.toFixed(4));
 }
 
+// ================================
+// HELPER: GENERATOR JUDUL DINAMIS
+// ================================
+function generateDynamicTitle(baseTitle, unit = "Ha") {
+  const selectedKecamatan =
+    document.querySelector("#filterKecamatan")?.value || "";
+  const selectedKomoditas =
+    document.querySelector("#filterKomoditas")?.value || "";
+  const selectedTahun = document.querySelector("#filterTahun")?.value || "";
+  const selectedJenis = document.querySelector("#filterJenis")?.value || "";
+
+  // Awalan: pastikan kapitalisasi konsisten
+  let title = baseTitle.trim();
+
+  // Tambahkan satuan (Ha atau Kw)
+  title += ` (${unit})`;
+
+  // Siapkan tambahan detail
+  const detailParts = [];
+  if (selectedKecamatan) detailParts.push(`Kecamatan ${selectedKecamatan}`);
+  if (selectedKomoditas) detailParts.push(`Komoditas ${selectedKomoditas}`);
+  if (selectedTahun) detailParts.push(`Tahun ${selectedTahun}`);
+
+  // Gabungkan
+  if (detailParts.length > 0) title += " - " + detailParts.join(" - ");
+  return title;
+}
+
 function formatNumber(num, decimals = 2) {
   if (num == null || isNaN(num)) return "0,00";
   return Number(num).toLocaleString("id-ID", {
@@ -132,6 +160,16 @@ function renderSayurBuahChart(filtered) {
   const el = document.querySelector("#sayurBuahChart");
   if (!el) return;
 
+  const titleEl = document.querySelector("#treeMapTitle");
+  if (titleEl) {
+    const jenis = document.querySelector("#filterJenis")?.value || "Luas Panen";
+    const unit = jenis.toLowerCase().includes("produksi") ? "Kw" : "Ha";
+    titleEl.textContent = generateDynamicTitle(
+      `Sepuluh Komoditas dengan ${jenis} Tertinggi`,
+      unit
+    );
+  }
+
   const fokus = filtered.filter(
     (item) =>
       item.kecamatan !== "Aceh Utara" &&
@@ -150,6 +188,9 @@ function renderSayurBuahChart(filtered) {
   const topData = sorted.slice(0, topN);
   const others = sorted.slice(topN);
 
+  // ============================
+  // Data untuk Treemap
+  // ============================
   const series = [
     ...topData.map(([komoditas, luas]) => ({
       x: komoditas,
@@ -203,6 +244,9 @@ function renderSayurBuahChart(filtered) {
 // ================================
 function renderCharts(dataJson) {
   if (!dataJson) return;
+
+  const selectedKecamatan = document.querySelector("#filterKecamatan")?.value;
+
   const filteredData = dataJson.filter((d) => d.kecamatan !== "Aceh Utara");
 
   // PIE: Tanaman Pokok
@@ -232,6 +276,14 @@ function renderCharts(dataJson) {
 
     const labels = entries.map((e) => e.label);
     const series = entries.map((e) => e.value);
+
+    const titleEl = document.querySelector("#pieTitle");
+    if (titleEl) {
+      titleEl.textContent = generateDynamicTitle(
+        "Luas Panen Tanaman Pokok",
+        "Ha"
+      );
+    }
 
     if (pieChart) pieChart.destroy();
     pieChart = new ApexCharts(pieEl, {
@@ -285,6 +337,14 @@ function renderCharts(dataJson) {
     pieChart.render();
   }
 
+  const titleEl = document.querySelector("#horizontalBarTitle");
+  if (titleEl) {
+    titleEl.textContent = generateDynamicTitle(
+      "Sepuluh Kecamatan dengan Luas Panen Tertinggi",
+      "Ha"
+    );
+  }
+
   // BAR: Top 10 Kecamatan
   const barEl = document.querySelector("#horizontalBarChart");
   if (barEl) {
@@ -330,6 +390,9 @@ function renderVertikalBarChart(filtered) {
   const el = document.querySelector("#vertikalBarChart");
   if (!el) return;
 
+  // ✅ Tambahkan baris ini
+  const selectedKecamatan = document.querySelector("#filterKecamatan")?.value;
+
   const fokus = filtered.filter((d) => {
     const val = parseNumber(d.produksi || d.nilai || d.jumlah || d.total);
     return d.kecamatan && d.kecamatan !== "Aceh Utara" && val > 0;
@@ -354,6 +417,14 @@ function renderVertikalBarChart(filtered) {
     vertikalBarChart.destroy();
   }
 
+  const titleEl = document.querySelector("#vertikalBarTitle");
+  if (titleEl) {
+    titleEl.textContent = generateDynamicTitle(
+      "Sepuluh Kecamatan dengan Produksi Tertinggi",
+      "Kw"
+    );
+  }
+
   vertikalBarChart = new ApexCharts(el, {
     chart: { type: "bar", height: 400, toolbar: { show: false } },
     series: [{ name: "Produksi (Kw)", data: arr.map((d) => d.total) }],
@@ -363,7 +434,7 @@ function renderVertikalBarChart(filtered) {
       labels: { rotate: -30, style: { fontSize: "12px", fontWeight: 500 } },
     },
     yaxis: {
-      title: { text: "Jumlah Produksi (Kw)" },
+      title: { text: "Jumlah Produksi (Kwintal)" },
       labels: { style: { fontSize: "12px", fontWeight: 500 } },
     },
     plotOptions: {
@@ -500,12 +571,12 @@ function renderStackedBarChartKomoditas(filtered) {
     window.stackedBarChartKomoditas.destroy();
   }
 
-  // Update judul chart
   const titleEl = document.querySelector("#chartKomoditasTitle");
   if (titleEl) {
-    titleEl.textContent = selectedKecamatan
-      ? `10 Komoditas dengan Produksi Teratas - Kecamatan ${selectedKecamatan}`
-      : "10 Komoditas dengan Produksi Teratas";
+    titleEl.textContent = generateDynamicTitle(
+      "Sepuluh Komoditas dengan Produksi Tertinggi",
+      "Kw"
+    );
   }
 
   // Render chart baru
