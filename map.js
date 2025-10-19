@@ -65,7 +65,7 @@ function renderMap() {
     "11.08_kecamatan_path_20": "Nibong",
     "11.08_kecamatan_path_21": "Simpang Kramat",
     "11.08_kecamatan_path_22": "Lapang",
-    "11.08_kecamatan_path_23": "Pirak Timur",
+    "11.08_kecamatan_path_23": "Pirak Timu",
     "11.08_kecamatan_path_24": "Geuredong Pase",
     "11.08_kecamatan_path_25": "Banda Baro",
     "11.08_kecamatan_path_26": "Nisam Antara",

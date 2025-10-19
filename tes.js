@@ -8,6 +8,7 @@ let vertikalBarChart = null;
 let currentPage = 1;
 const rowsPerPage = 20;
 let currentTableData = [];
+let showAllBars = false;
 
 // ================================
 // HELPER: FORMAT & PARSE
@@ -359,23 +360,53 @@ function renderCharts(dataJson) {
       luas: truncate4(luas),
     }));
     arr.sort((a, b) => b.luas - a.luas);
-    arr = arr.slice(0, 10);
+
+    // --- Ambil Top 10 + Lainnya ---
+    const topN = 10;
+    const topData = arr.slice(0, topN);
+    const others = arr.slice(topN);
+
+    if (others.length > 0) {
+      const totalLainnya = others.reduce((sum, d) => sum + d.luas, 0);
+      const rata2Lainnya = totalLainnya / others.length;
+      topData.push({
+        kec: "Lainnya",
+        luas: truncate4(rata2Lainnya),
+        detail: others.map((d) => ({ name: d.kec, value: d.luas })),
+      });
+    }
+
+    const displayData = topData;
 
     if (barChart) barChart.destroy();
     barChart = new ApexCharts(barEl, {
-      chart: { type: "bar", height: 400 },
+      chart: { type: "bar", height: showAllBars ? 800 : 400 },
       plotOptions: {
         bar: { horizontal: true, borderRadius: 4, distributed: true },
       },
-      colors: arr.map((d) => window.kecamatanColors[d.kec] || "#43A047"),
-      series: [{ name: "Luas Panen", data: arr.map((d) => d.luas) }],
+      colors: displayData.map(
+        (d) => window.kecamatanColors[d.kec] || "#43A047"
+      ),
+      series: [{ name: "Luas Panen", data: displayData.map((d) => d.luas) }],
       xaxis: {
-        categories: arr.map((d) => d.kec),
+        categories: displayData.map((d) => d.kec),
         title: { text: "Luas Panen (Ha)" },
       },
       yaxis: { title: { text: "Kecamatan" } },
       dataLabels: { enabled: true, formatter: (val) => formatNumber(val, 2) },
-      tooltip: { y: { formatter: (val) => `${formatNumber(val, 2)} Ha` } },
+      tooltip: {
+        y: {
+          formatter: function (val, opts) {
+            const dp = displayData[opts.dataPointIndex];
+            if (dp.kec === "Lainnya" && dp.detail) {
+              return dp.detail
+                .map((d) => `${d.name}: ${formatNumber(d.value, 2)} Ha`)
+                .join("<br>");
+            }
+            return `${formatNumber(val, 2)} Ha`;
+          },
+        },
+      },
       legend: { show: false },
       noData: { text: "Tidak ada data" },
     });
@@ -405,13 +436,28 @@ function renderVertikalBarChart(filtered) {
     agg[nama] = (agg[nama] || 0) + produksi;
   });
 
-  const arr = Object.entries(agg)
+  let arr = Object.entries(agg)
     .map(([kecamatan, total]) => ({
       kecamatan,
       total: parseFloat(total.toFixed(2)),
     }))
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 10);
+    .sort((a, b) => b.total - a.total);
+
+  const topN = 10;
+  const topData = arr.slice(0, topN);
+  const others = arr.slice(topN);
+
+  if (others.length > 0) {
+    const totalLainnya = others.reduce((sum, d) => sum + d.total, 0);
+    const rata2Lainnya = totalLainnya / others.length;
+    topData.push({
+      kecamatan: "Lainnya",
+      total: truncate4(rata2Lainnya),
+      detail: others.map((d) => ({ name: d.kecamatan, value: d.total })),
+    });
+  }
+
+  arr = topData;
 
   if (vertikalBarChart && typeof vertikalBarChart.destroy === "function") {
     vertikalBarChart.destroy();
@@ -445,7 +491,19 @@ function renderVertikalBarChart(filtered) {
       },
     },
     dataLabels: { enabled: false },
-    tooltip: { y: { formatter: (val) => `${formatNumber(val, 2)} Kw` } },
+    tooltip: {
+      y: {
+        formatter: function (val, opts) {
+          const dp = arr[opts.dataPointIndex];
+          if (dp.kecamatan === "Lainnya" && dp.detail) {
+            return dp.detail
+              .map((d) => `${d.name}: ${formatNumber(d.value, 2)} Kw`)
+              .join("<br>");
+          }
+          return `${formatNumber(val, 2)} Kw`;
+        },
+      },
+    },
     colors: arr.map((d) => window.kecamatanColors?.[d.kecamatan] || "#43A047"),
     legend: { show: false },
     noData: { text: "Tidak ada data produksi" },
@@ -551,16 +609,43 @@ function renderStackedBarChartKomoditas(filtered) {
     total: Object.values(thnObj).reduce((a, b) => a + b, 0),
   }));
 
-  // Ambil 10 komoditas teratas
-  const top10 = totalKomoditas
-    .sort((a, b) => b.total - a.total)
-    .slice(0, 10)
-    .map((d) => d.komoditas);
+  const topN = 10;
+  const sorted = totalKomoditas.sort((a, b) => b.total - a.total);
+  const topData = sorted.slice(0, topN);
+  const others = sorted.slice(topN);
+
+  if (others.length > 0) {
+    const lainnyaAgg = {};
+    const lainnyaDetail = {};
+
+    others.forEach((d) => {
+      const kom = d.komoditas;
+      Object.entries(agg[kom] || {}).forEach(([tahun, val]) => {
+        // total per tahun
+        lainnyaAgg[tahun] = (lainnyaAgg[tahun] || 0) + val;
+
+        // detail per tahun
+        if (!lainnyaDetail[tahun]) lainnyaDetail[tahun] = [];
+        lainnyaDetail[tahun].push({ name: kom, value: val });
+      });
+    });
+
+    agg["Lainnya"] = lainnyaAgg;
+
+    const totalLainnya = Object.values(lainnyaAgg).reduce((a, b) => a + b, 0);
+    topData.push({
+      komoditas: "Lainnya",
+      total: truncate4(totalLainnya),
+      perTahun: lainnyaDetail, // ⬅️ simpan detail per tahun
+    });
+  }
+
+  const topKomoditas = topData.map((d) => d.komoditas);
 
   // Susun series berdasarkan tahun
   const series = years.map((tahun) => ({
     name: tahun.toString(),
-    data: top10.map((kom) => truncate4(agg[kom]?.[tahun] || 0)),
+    data: topKomoditas.map((kom) => truncate4(agg[kom]?.[tahun] || 0)),
   }));
 
   // Hapus chart lama jika ada
@@ -596,7 +681,7 @@ function renderStackedBarChartKomoditas(filtered) {
       },
     },
     xaxis: {
-      categories: top10,
+      categories: topKomoditas,
       labels: {
         rotate: -30,
         style: { fontSize: "12px" },
@@ -609,7 +694,22 @@ function renderStackedBarChartKomoditas(filtered) {
     legend: { position: "bottom" },
     tooltip: {
       y: {
-        formatter: (val) => `${formatNumber(val, 2)} Kw`,
+        formatter: function (val, opts) {
+          const tahun = opts.w.config.series[opts.seriesIndex].name;
+          const dpName = opts.w.globals.labels[opts.dataPointIndex];
+          const dataItem = topData.find((d) => d.komoditas === dpName);
+
+          if (dataItem?.komoditas === "Lainnya") {
+            const detailPerTahun = dataItem.perTahun?.[tahun];
+            if (detailPerTahun && detailPerTahun.length) {
+              return detailPerTahun
+                .map((d) => `${d.name}: ${formatNumber(d.value, 2)} Kw`)
+                .join("<br>");
+            }
+          }
+
+          return `${formatNumber(val, 2)} Kw`;
+        },
       },
     },
     fill: { opacity: 0.85 },
