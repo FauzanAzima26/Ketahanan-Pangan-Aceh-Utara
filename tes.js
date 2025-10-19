@@ -69,6 +69,27 @@ function cleanKomoditasName(name) {
     .trim(); // buang spasi ujung
 }
 
+function cleanKecamatanName(name) {
+  if (!name) return "";
+
+  return (
+    name
+      .toLowerCase()
+      // hapus awalan "kab", "kab.", "kabupaten", "kota", "kotamadya"
+      .replace(/^(kab(\.|upaten)?|kota|kotamadya)\s*/gi, "")
+      // hapus kata "aceh" di depan atau di tengah
+      .replace(/\baceh\b/gi, "")
+      // hapus kata tambahan seperti "provinsi", "nanggroe", "darussalam", dll
+      .replace(/\b(provinsi|nanggroe|darussalam)\b/gi, "")
+      // hapus tanda baca, spasi ganda, atau tanda kurung
+      .replace(/[\(\)\.]/g, "")
+      .replace(/\s{2,}/g, " ")
+      .trim()
+      // kapitalisasi huruf pertama tiap kata biar rapi
+      .replace(/\b\w/g, (c) => c.toUpperCase())
+  );
+}
+
 function parseNumber(val) {
   if (val == null) return 0;
   let str = String(val).trim();
@@ -797,7 +818,15 @@ window.initDashboard = function (allData) {
   function fillSelect(id, values) {
     const el = document.querySelector(id);
     if (!el) return;
-    values = Array.from(values).sort();
+
+    // ✅ Hapus semua opsi lama kecuali placeholder pertama (misal "-- Semua Tahun --")
+    const firstOption = el.querySelector("option:first-child");
+    el.innerHTML = ""; // kosongkan dulu
+    if (firstOption) el.appendChild(firstOption); // kembalikan placeholder
+
+    // ✅ Hapus duplikat, urutkan, dan isi ulang
+    values = Array.from(new Set(values)).sort();
+
     values.forEach((v) => {
       const opt = document.createElement("option");
       opt.value = String(v);
@@ -806,22 +835,44 @@ window.initDashboard = function (allData) {
     });
   }
 
+  // Ambil hanya data dari API luas_sayur dan produksi_sayur
+  const dataSayur = allData.filter(
+    (d) =>
+      (d.sumber && /luas_sayur|produksi_sayur/i.test(d.sumber)) || // berdasarkan kolom sumber
+      (d.file && /luas_sayur|produksi_sayur/i.test(d.file)) // kalau nama file ikut disimpan
+  );
+
+  // Isi dropdown kecamatan hanya dari dataSayur
   fillSelect(
     "#filterKecamatan",
     new Set(
-      allData.map((d) => d.kecamatan).filter((k) => k && k !== "Aceh Utara")
+      dataSayur
+        .filter((d) => {
+          // Ambil hanya kecamatan (bukan kabupaten)
+          return (
+            d.tingkat?.toLowerCase() === "kecamatan" ||
+            !/^aceh\s+/i.test(d.wilayah || d.kecamatan || "")
+          );
+        })
+        .map((d) => cleanKecamatanName(d.kecamatan || d.wilayah))
+        .filter((k) => k && !/^aceh$/i.test(k))
     )
   );
+  // Komoditas hanya dari dataSayur
   fillSelect(
     "#filterKomoditas",
     new Set(
-      allData.map((d) => cleanKomoditasName(d.komoditas)).filter((k) => k)
+      dataSayur.map((d) => cleanKomoditasName(d.komoditas)).filter((k) => k)
     )
   );
-  fillSelect(
-    "#filterTahun",
-    new Set(allData.map((d) => d.tahun).filter((t) => t))
-  );
+
+  // Ambil tahun dari dataSayur
+  const tahunList = [
+    ...new Set(dataSayur.map((d) => d.tahun).filter((t) => t && !isNaN(t))),
+  ].sort((a, b) => a - b); // urutkan dari kecil ke besar
+
+  // Isi dropdown tahun
+  fillSelect("#filterTahun", tahunList);
 
   function applyFilters() {
     const kec = document.querySelector("#filterKecamatan")?.value || "";
