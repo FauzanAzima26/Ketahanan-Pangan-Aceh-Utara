@@ -47,7 +47,9 @@
     try {
       let allData = [];
 
-      // Tahun dinamis
+      // ================================
+      // 1. Tahun Dinamis
+      // ================================
       const currentYear = new Date().getFullYear();
       const startYear = 2020;
       const years = Array.from(
@@ -55,60 +57,83 @@
         (_, i) => startYear + i
       );
 
-      // === Template umum BPS ===
+      // ================================
+      // 2. Base URL dan Key BPS
+      // ================================
       const baseURL =
         "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25";
       const key = "9a994cbfdcba3e84dbe9eceba615a65f";
 
-      // === Konfigurasi per wilayah dan tabel ===
+      // ================================
+      // 3. Konfigurasi per Jenis Data
+      // ================================
       const configs = [
         {
-          jenis: "luas",
+          jenis: "luas_sayur",
           wilayah: "1111000", // Aceh Utara
           id_tabel: "bXNVb1pmZndqUDhKWElUSjhZRitidz09",
+          tingkat: "kecamatan",
         },
         {
-          jenis: "produksi",
+          jenis: "produksi_sayur",
           wilayah: "1111000", // Aceh Utara
           id_tabel: "eHEwRmg2VUZjY2lWNWNYaVhQK1h4QT09",
+          tingkat: "kecamatan",
         },
         {
           jenis: "padi_provinsi",
-          wilayah: "1100000", // Aceh (Provinsi)
+          wilayah: "1100000", // Provinsi Aceh
           id_tabel: "ZjZ6MXlacGJNR0JaaHBPRSs0TzNUdz09",
+          tingkat: "kabupaten",
         },
       ];
 
-      // === Buat semua URL dinamis berdasarkan tahun dan config ===
+      // ================================
+      // 4. Generate URL untuk Semua Tahun
+      // ================================
       const urls = configs.flatMap((cfg) =>
         years.map((y) => ({
           jenis: cfg.jenis,
           tahun: y,
+          tingkat: cfg.tingkat,
           url: `${baseURL}/tahun/${y}/id_tabel/${cfg.id_tabel}/wilayah/${cfg.wilayah}/key/${key}`,
         }))
       );
 
-      // === Fetch semua API sekaligus ===
+      // ================================
+      // 5. Fetch Semua API Sekaligus
+      // ================================
       const results = await Promise.all(
         urls.map((u) =>
           fetch(u.url)
             .then((r) => r.json().catch(() => null))
-            .then((j) => ({ jenis: u.jenis, tahun: u.tahun, json: j }))
+            .then((j) => ({
+              jenis: u.jenis,
+              tahun: u.tahun,
+              tingkat: u.tingkat,
+              json: j,
+            }))
         )
       );
 
-      // === Loop hasil dan gabungkan ke allData ===
-      for (const { jenis, tahun, json } of results) {
+      // ================================
+      // 6. Parsing dan Gabungkan ke Data Global
+      // ================================
+      let dataSayurBuah = []; // gabungan luas + produksi sayur
+      let dataPadiProvinsi = []; // khusus padi provinsi
+
+      for (const { jenis, tahun, tingkat, json } of results) {
         if (!json || !json.data || !json.data[1]) continue;
+
         const tabel = json.data[1];
         const rows = tabel.data || [];
         const kolom = tabel.kolom || {};
         const sumber = `BPS ${tahun} (${jenis})`;
-        const dataParsed = [];
+        const parsed = [];
 
-        rows.forEach((kec) => {
-          const namaWil = (kec.label || "-").trim();
-          const vars = kec.variables || {};
+        rows.forEach((wilayah) => {
+          const namaWil = (wilayah.label || "-").trim();
+          const vars = wilayah.variables || {};
 
           for (const kodeVar in vars) {
             if (!kolom[kodeVar]) continue;
@@ -126,42 +151,44 @@
                   .replace(",", ".")
               ) || 0;
 
+            // Ubah m2 → ha
             if ((meta.satuan || "").toLowerCase().includes("m<sup>2"))
               val /= 10000;
 
-            // cari existing
-            let existing = dataParsed.find(
-              (d) => d.kecamatan === namaWil && d.komoditas === komoditas
+            let existing = parsed.find(
+              (d) => d.wilayah === namaWil && d.komoditas === komoditas
             );
             if (!existing) {
               existing = {
-                kecamatan: namaWil,
+                wilayah: namaWil,
+                tingkat,
                 komoditas,
                 tahun,
                 satuan: meta.satuan || "-",
                 sumber,
               };
-              dataParsed.push(existing);
+              parsed.push(existing);
             }
 
-            // masukkan ke kolom sesuai jenis
             if (jenis.includes("produksi")) existing.produksi = val;
             else if (jenis.includes("luas")) existing.luas = val;
-            else existing.nilai = val; // misalnya padi_provinsi
+            else existing.nilai = val; // misalnya padi
           }
         });
-        if (jenis === "padi_provinsi") {
-          window.dataPadiProvinsi = (window.dataPadiProvinsi || []).concat(
-            dataParsed
-          );
+
+        // Gabungkan sesuai jenis
+        if (jenis.includes("padi")) {
+          dataPadiProvinsi = dataPadiProvinsi.concat(parsed);
         } else {
-          allData = allData.concat(dataParsed);
+          dataSayurBuah = dataSayurBuah.concat(parsed);
         }
       }
 
-      
-      console.log("📊 Total data gabungan:", allData.length);
-      window.allData = allData;
+      // ================================
+      // 7. Data Siap Digunakan
+      // ================================
+      console.log("✅ Data Sayuran & Buah:", dataSayurBuah);
+      console.log("✅ Data Padi Provinsi:", dataPadiProvinsi);
 
       // === 2. Judul & breadcrumb ===
       $(".share-link").append(sosmed("Dashboard Panen"));
@@ -322,6 +349,22 @@
         await loadScript(
           "/themes/_ceudah-copy/assets/js/map-dashboard.js?v=" + Date.now()
         );
+
+        // Gabungkan semua data
+        allData = dataSayurBuah.concat(dataPadiProvinsi);
+
+        // Normalisasi nama field
+        allData = allData.map((d) => ({
+          ...d,
+          kecamatan: d.wilayah,
+        }));
+
+        console.log("✅ Data Sayuran & Buah:", dataSayurBuah.length);
+        console.log("✅ Data Padi Provinsi:", dataPadiProvinsi.length);
+        console.log("📊 Jumlah record:", allData.length);
+
+        // render dashboard
+        initDashboard(allData);
 
         // render dashboard
         initDashboard(allData);

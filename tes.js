@@ -9,6 +9,8 @@ let currentPage = 1;
 const rowsPerPage = 20;
 let currentTableData = [];
 let showAllBars = false;
+let allData = [];
+let dataPadiProvinsi = [];
 
 // ================================
 // HELPER: FORMAT & PARSE
@@ -274,182 +276,119 @@ function renderSayurBuahChart(filtered) {
   sayurBuahChart.render();
 }
 
-// ============================
-// CHART: LINE (Padi) & BAR (Top 10 Kecamatan Non-Padi)
-// ============================
-function renderCharts(allData) {
-  if (!allData) return;
+console.log("✅ CEK DATA HASIL PARSING");
+console.log("All Data:", allData.slice(0, 10)); // contoh 10 data pertama
+console.log("Padi Provinsi:", dataPadiProvinsi.slice(0, 10));
 
-  const dataSource = window.dataPadiProvinsi?.length
-    ? window.dataPadiProvinsi
-    : allData;
+function renderCharts(filteredData) {
+  if (!filteredData || !filteredData.length) return;
 
-  // ✅ Ambil hanya data untuk Aceh Utara
-  const filteredData = dataSource.filter((d) => d.kecamatan === "Aceh Utara");
+  const lineEl = document.querySelector("#pieChart");
+  if (!lineEl) return;
 
-  // ============================
-  // 🔹 LINE CHART: Luas Panen PADI per Tahun
-  // ============================
-  const lineEl = document.querySelector("#pieChart"); // gunakan container lama
-  if (lineEl) {
-    // Ambil hanya komoditas yang mengandung "padi"
-    const padiData = filteredData.filter((item) =>
-      cleanKomoditasName(item.komoditas).toLowerCase().includes("padi")
-    );
-
-    // Ambil tahun unik dari data Padi (tetap dari semua baris padiData)
-    const years = Array.from(
-      new Set(padiData.map((d) => parseInt(d.tahun)).filter((t) => !isNaN(t)))
-    ).sort((a, b) => a - b);
-
-    // Agregasi per tahun — jika ada baris provinsi (Aceh) untuk tahun itu, gunakan nilainya;
-    // jika tidak, jumlahkan baris-baris kabupaten/kecamatan.
-    const agg = {};
-
-    years.forEach((y) => {
-      const rows = padiData.filter((d) => String(d.tahun) === String(y));
-
-      // cari row provinsi (label 'aceh' atau sumber mengandung 'provinsi')
-      const provRow = rows.find((r) => {
-        const kec = (r.kecamatan || r.label || "").toString().toLowerCase();
-        const sumber = (r.sumber || "").toString().toLowerCase();
-        return (
-          kec === "aceh" || kec === "aceh utara" || sumber.includes("provinsi")
-        );
-      });
-
-      if (provRow) {
-        // gunakan nilai provinsi langsung (prioritas: nilai -> luas -> value)
-        const v = normalizeLuas(provRow);
-        agg[y] = Number(v) || 0;
-      } else {
-        // tidak ada row provinsi, jumlahkan semua baris (mis. per kabupaten)
-        const sum = rows.reduce((s, r) => s + normalizeLuas(r), 0);
-        agg[y] = Number(sum) || 0;
-      }
-    });
-
-    // Debug: lihat nilai per tahun di console (hapus kalau sudah ok)
-    console.log("DEBUG: agg luas padi per tahun", agg);
-
-    const seriesData = years.map((t) => truncate4(agg[t] || 0));
-
-    // Ubah judul
-    const titleEl = document.querySelector("#pieTitle");
-    if (titleEl) {
-      titleEl.textContent = "Tren Luas Panen Padi per Tahun (Ha)";
-    }
-
-    if (pieChart) pieChart.destroy();
-    pieChart = new ApexCharts(lineEl, {
-      chart: { type: "line", height: 400, toolbar: { show: false } },
-      series: [
-        {
-          name: "Luas Panen (Ha)",
-          data: seriesData,
-        },
-      ],
-      xaxis: {
-        categories: years,
-        title: { text: "Tahun" },
-        labels: { style: { fontSize: "12px" } },
-      },
-      yaxis: {
-        title: { text: "Luas Panen (Ha)" },
-        labels: { formatter: (val) => formatNumber(val, 0) },
-      },
-      stroke: { curve: "smooth", width: 3 },
-      markers: { size: 4 },
-      tooltip: {
-        y: { formatter: (val) => `${formatNumber(val, 2)} Ha` },
-      },
-      colors: ["#43A047"],
-      legend: { show: false },
-      noData: { text: "Tidak ada data" },
-    });
-
-    pieChart.render();
+  const titleEl = document.querySelector("#pieTitle");
+  if (titleEl) {
+    // 🔹 Hapus teks "(Ha)" dari judul
+    titleEl.textContent = "Luas Panen dan Produksi Padi Kabupaten Aceh Utara";
   }
 
-  // ============================
-  // 🔹 BAR CHART: Top 10 Kecamatan Non-Padi
-  // ============================
-  const barEl = document.querySelector("#horizontalBarChart");
-  if (barEl) {
-    const titleEl = document.querySelector("#horizontalBarTitle");
-    if (titleEl) {
-      titleEl.textContent = generateDynamicTitle(
-        "Sepuluh Kecamatan dengan Luas Panen Tertinggi (Non-Padi)",
-        "Ha"
-      );
-    }
+  // Fokus hanya data Padi Aceh Utara
+  const luas = filteredData.filter(
+    (d) =>
+      /padi/i.test(d.komoditas) &&
+      /luas panen/i.test(d.komoditas) &&
+      d.kecamatan === "Aceh Utara"
+  );
 
-    // ✅ Ambil data selain padi dan bukan Aceh Utara
-    const nonPadi = allData.filter(
-      (item) =>
-        !(item.komoditas || "").toLowerCase().includes("padi") &&
-        (item.kecamatan || "").toLowerCase() !== "aceh utara"
-    );
+  const produksi = filteredData.filter(
+    (d) =>
+      /padi/i.test(d.komoditas) &&
+      /produksi/i.test(d.komoditas) &&
+      d.kecamatan === "Aceh Utara"
+  );
 
-    const agg = {};
-    nonPadi.forEach((item) => {
-      const luas = normalizeLuas(item);
-      if (!luas) return;
-      agg[item.kecamatan] = (agg[item.kecamatan] || 0) + luas;
-    });
+  const years = Array.from(
+    new Set(
+      [...luas, ...produksi]
+        .map((d) => parseInt(d.tahun))
+        .filter((t) => !isNaN(t))
+    )
+  ).sort((a, b) => a - b);
 
-    let arr = Object.entries(agg).map(([kec, luas]) => ({
-      kec,
-      luas: truncate4(luas),
-    }));
-    arr.sort((a, b) => b.luas - a.luas);
+  const luasSeries = years.map(
+    (y) => normalizeLuas(luas.find((d) => +d.tahun === y)) || 0
+  );
+  const produksiSeries = years.map(
+    (y) => produksi.find((d) => +d.tahun === y)?.nilai || 0
+  );
 
-    const topN = 10;
-    const topData = arr.slice(0, topN);
-    const others = arr.slice(topN);
+  // 🔹 Hapus chart lama
+  if (pieChart) pieChart.destroy();
 
-    if (others.length > 0) {
-      const totalLainnya = others.reduce((sum, d) => sum + d.luas, 0);
-      const rata2Lainnya = totalLainnya / others.length;
-      topData.push({
-        kec: "Lainnya",
-        luas: truncate4(rata2Lainnya),
-        detail: others.map((d) => ({ name: d.kec, value: d.luas })),
-      });
-    }
-
-    if (barChart) barChart.destroy();
-    barChart = new ApexCharts(barEl, {
-      chart: { type: "bar", height: 400 },
-      plotOptions: {
-        bar: { horizontal: true, borderRadius: 4, distributed: true },
-      },
-      colors: topData.map((d) => window.kecamatanColors?.[d.kec] || "#43A047"),
-      series: [{ name: "Luas Panen", data: topData.map((d) => d.luas) }],
-      xaxis: {
-        categories: topData.map((d) => d.kec),
-        title: { text: "Luas Panen (Ha)" },
-      },
-      yaxis: { title: { text: "Kecamatan" } },
-      dataLabels: { enabled: true, formatter: (val) => formatNumber(val, 2) },
-      tooltip: {
-        y: {
-          formatter: function (val, opts) {
-            const dp = topData[opts.dataPointIndex];
-            if (dp.kec === "Lainnya" && dp.detail) {
-              return dp.detail
-                .map((d) => `${d.name}: ${formatNumber(d.value, 2)} Ha`)
-                .join("<br>");
-            }
-            return `${formatNumber(val, 2)} Ha`;
-          },
+  const options = {
+    chart: {
+      height: 400,
+      type: "bar",
+      stacked: false,
+      toolbar: {
+        show: true,
+        tools: {
+          download: true,
         },
       },
-      legend: { show: false },
-      noData: { text: "Tidak ada data" },
-    });
-    barChart.render();
-  }
+    },
+    series: [
+      { name: "Luas Panen (Ha)", data: luasSeries },
+      { name: "Produksi (Ton)", data: produksiSeries },
+    ],
+    colors: ["#43A047", "#1E88E5"],
+    xaxis: {
+      categories: years,
+      title: { text: "Tahun" },
+    },
+    yaxis: [
+      {
+        title: { text: "Luas Panen (Ha)" },
+        labels: { formatter: (val) => val.toLocaleString() },
+      },
+      {
+        opposite: true,
+        title: { text: "Produksi (Ton)" },
+        labels: { formatter: (val) => val.toLocaleString() },
+      },
+    ],
+    plotOptions: {
+      bar: {
+        horizontal: false,
+        columnWidth: "45%", // 🔧 buat proporsional
+        borderRadius: 4,
+      },
+    },
+    dataLabels: {
+      enabled: false, // 🔹 hilangkan teks di dalam bar
+    },
+    tooltip: {
+      shared: true,
+      intersect: false,
+      y: {
+        formatter: function (val, { seriesIndex }) {
+          if (seriesIndex === 0) return `${val.toLocaleString()} Ha`;
+          if (seriesIndex === 1) return `${val.toLocaleString()} Ton`;
+          return val;
+        },
+      },
+    },
+    legend: {
+      position: "top",
+      horizontalAlign: "center",
+      markers: { width: 10, height: 10, radius: 12 },
+      itemMargin: { horizontal: 15, vertical: 0 },
+    },
+    noData: { text: "Tidak ada data" },
+  };
+
+  pieChart = new ApexCharts(lineEl, options);
+  pieChart.render();
 }
 
 // ================================
@@ -459,11 +398,8 @@ function renderVertikalBarChart(filtered) {
   const el = document.querySelector("#vertikalBarChart");
   if (!el) return;
 
-  // ✅ Tambahkan baris ini
-  const selectedKecamatan = document.querySelector("#filterKecamatan")?.value;
-
   const fokus = filtered.filter((d) => {
-    const val = parseNumber(d.produksi || d.nilai || d.jumlah || d.total);
+    const val = normalizeProduksi(d);
     return d.kecamatan && d.kecamatan !== "Aceh Utara" && val > 0;
   });
 
@@ -760,6 +696,92 @@ function renderStackedBarChartKomoditas(filtered) {
   window.stackedBarChartKomoditas.render();
 }
 
+function renderHorizontalBarChart(filtered) {
+  const barEl = document.querySelector("#horizontalBarChart");
+  if (!barEl) return;
+
+  const titleEl = document.querySelector("#horizontalBarTitle");
+  if (titleEl) {
+    titleEl.textContent = generateDynamicTitle(
+      "Sepuluh Kecamatan dengan Luas Panen Tertinggi",
+      "Ha"
+    );
+  }
+
+  const nonPadi = filtered.filter((item) => {
+    const kom = (item.komoditas || "").toLowerCase();
+    const kec = (item.kecamatan || "").toLowerCase();
+    const luas = normalizeLuas(item);
+    return kom && !kom.includes("padi") && kec !== "aceh utara" && luas > 0;
+  });
+
+  if (nonPadi.length === 0) {
+    barEl.innerHTML = "<p class='text-center text-muted'>Tidak ada data.</p>";
+    return;
+  }
+
+  const agg = {};
+  nonPadi.forEach((item) => {
+    const luas = normalizeLuas(item);
+    if (!luas) return;
+    agg[item.kecamatan] = (agg[item.kecamatan] || 0) + luas;
+  });
+
+  let arr = Object.entries(agg).map(([kec, luas]) => ({
+    kec,
+    luas: truncate4(luas),
+  }));
+  arr.sort((a, b) => b.luas - a.luas);
+
+  const topN = 10;
+  const topData = arr.slice(0, topN);
+  const others = arr.slice(topN);
+
+  if (others.length > 0) {
+    const totalLainnya = others.reduce((sum, d) => sum + d.luas, 0);
+    const rata2Lainnya = totalLainnya / others.length;
+    topData.push({
+      kec: "Lainnya",
+      luas: truncate4(rata2Lainnya),
+      detail: others.map((d) => ({ name: d.kec, value: d.luas })),
+    });
+  }
+
+  if (barChart) barChart.destroy();
+
+  barChart = new ApexCharts(barEl, {
+    chart: { type: "bar", height: 400 },
+    plotOptions: {
+      bar: { horizontal: true, borderRadius: 4, distributed: true },
+    },
+    colors: topData.map((d) => window.kecamatanColors?.[d.kec] || "#43A047"),
+    series: [{ name: "Luas Panen", data: topData.map((d) => d.luas) }],
+    xaxis: {
+      categories: topData.map((d) => d.kec),
+      title: { text: "Luas Panen (Ha)" },
+    },
+    yaxis: { title: { text: "Kecamatan" } },
+    dataLabels: { enabled: true, formatter: (val) => formatNumber(val, 2) },
+    tooltip: {
+      y: {
+        formatter: function (val, opts) {
+          const dp = topData[opts.dataPointIndex];
+          if (dp.kec === "Lainnya" && dp.detail) {
+            return dp.detail
+              .map((d) => `${d.name}: ${formatNumber(d.value, 2)} Ha`)
+              .join("<br>");
+          }
+          return `${formatNumber(val, 2)} Ha`;
+        },
+      },
+    },
+    legend: { show: false },
+    noData: { text: "Tidak ada data" },
+  });
+
+  barChart.render();
+}
+
 // ================================
 // INIT DASHBOARD
 // ================================
@@ -767,8 +789,6 @@ window.initDashboard = function (allData) {
   if (window.dataPadiProvinsi && window.dataPadiProvinsi.length) {
     renderCharts(window.dataPadiProvinsi);
   }
-
-  console.log("🔥 initDashboard():", allData.length, "records");
 
   allData.forEach((d) => {
     d.kategori = classifyKategori(d.komoditas);
@@ -821,8 +841,9 @@ window.initDashboard = function (allData) {
 
     renderCharts(filtered);
     renderSayurBuahChart(filtered);
+    renderHorizontalBarChart(filtered);
 
-    const produksiData = filtered.filter((d) => parseFloat(d.produksi) > 0);
+    const produksiData = filtered.filter((d) => normalizeProduksi(d) > 0);
     console.log("📊 Data produksi untuk chart:", produksiData.length);
     renderVertikalBarChart(produksiData);
     renderStackedBarChartKomoditas(filtered);
