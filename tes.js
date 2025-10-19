@@ -811,7 +811,7 @@ window.initDashboard = function (allData) {
     const filtered = allData.filter(
       (d) =>
         (!kec || d.kecamatan === kec) &&
-        (!kom || d.komoditas === kom) &&
+        (!kom || cleanKomoditasName(d.komoditas) === kom) && // ✅ perbaikan di sini
         (!thn || String(d.tahun) === String(thn))
     );
 
