@@ -1,0 +1,176 @@
+{
+  "status": "OK",
+  "data-availability": "available",
+  "data": [
+    {
+      "page": 1,
+      "pages": 1,
+      "per_page": 1,
+      "count": 1,
+      "total": 1
+    },
+    {
+      "change_log": [],
+      "judul_tabel": "Luas Panen, Produktivitas, dan Produksi Padi Menurut Kabupaten/Kota di Provinsi Aceh, 2024",
+      "judul_tabel_en": "Harvested Area, Yield, and Production of Paddy by Regency/Municipality in Aceh Province, 2024",
+      "lingkup": "Kabupaten/Kota&lt;br&gt;&lt;i&gt;Regency/Municipality&lt;/i&gt;",
+      "lingkup_id": "Kabupaten/Kota",
+      "lingkup_en": "Regency/Municipality",
+      "tahun_data": 2024,
+      "wilayah": "Aceh",
+      "penanggung_jawab": "BPS Provinsi Aceh",
+      "show_satuan": false,
+      "id_subject": "ekFITkFSSllEWlh5Y1RzaUZFSlFsUT09",
+      "bab": "Pertanian, Kehutanan, Peternakan, dan Perikanan",
+      "bab_en": "Agriculture, Forestry, Livestock, and Fishery",
+      "subject": "Tanaman Pangan",
+      "subject_en": "Food Crops",
+      "mms_id": 557,
+      "mms_subject": "Pertanian, Kehutanan, Perikanan",
+      "keterangan_data": {
+        "...": "Data tidak tersedia",
+        "–": "Tidak ada atau nol",
+        "NA": "Data tidak dapat ditampilkan",
+        "e": "Angka estimasi",
+        "r": "Angka diperbaiki",
+        "~0": "Data dapat diabaikan",
+        "*": "Angka sementara",
+        "**": "Angka sangat sementara",
+        "***": "Angka sangat sangat sementara",
+        "a": "25% &#60; RSE &#8804; 50%"
+      },
+      "kolom": {
+        "qjt4tgvtld": {
+          "nama_variabel": "Luas Panen Tanaman Padi (ha)",
+          "nama_variabel_en": "Harvested Area of Paddy (ha)",
+          "tipe": "Numerik",
+          "angka_desimal_dibelakang_koma": 2,
+          "satuan": "ha",
+          "satuan_en": "ha",
+          "metadata_indikator": null,
+          "metadata_konsep_definisi": null,
+          "metadata_kegunaan": null,
+          "metadata_keterangan_tambahan": null,
+          "metadata_interpretasi": null,
+          "metadata_rumusan": [],
+          "metadata_rumus_html": null,
+          "metadata_dihasilkan_oleh": [],
+          "tanggal_cut_off": null
+        },
+        "od6zj61thq": {
+          "nama_variabel": "Produktivitas Tanaman Padi (ku/ha)",
+          "nama_variabel_en": "Yield of Paddy (qu/ha)",
+          "tipe": "Numerik",
+          "angka_desimal_dibelakang_koma": 2,
+          "satuan": "ku/ha",
+          "satuan_en": "qu/ha",
+          "metadata_indikator": null,
+          "metadata_konsep_definisi": null,
+          "metadata_kegunaan": null,
+          "metadata_keterangan_tambahan": null,
+          "metadata_interpretasi": null,
+          "metadata_rumusan": [],
+          "metadata_rumus_html": null,
+          "metadata_dihasilkan_oleh": [],
+          "tanggal_cut_off": null
+        },
+        "mtn492ybb1": {
+          "nama_variabel": "Rekap Produksi Padi (ton)",
+          "nama_variabel_en": "Production of Paddy (ton)",
+          "tipe": "Numerik",
+          "angka_desimal_dibelakang_koma": 2,
+          "satuan": "ton",
+          "satuan_en": "ton",
+          "metadata_indikator": null,
+          "metadata_konsep_definisi": null,
+          "metadata_kegunaan": null,
+          "metadata_keterangan_tambahan": null,
+          "metadata_interpretasi": null,
+          "metadata_rumusan": [],
+          "metadata_rumus_html": null,
+          "metadata_dihasilkan_oleh": [],
+          "tanggal_cut_off": null
+        }
+      },
+      "data": [
+        {
+          "label": "Simeulue",
+          "label_raw": "Simeulue",
+          "satuan": null,
+          "kode_wilayah": 1101000,
+          "variables": {
+            "qjt4tgvtld": {
+              "value": "6.809,33",
+              "value_raw": "6.809,33",
+              "value_code": null
+            },
+            "od6zj61thq": {
+              "value": "34,22",
+              "value_raw": "34,22",
+              "value_code": null
+            },
+            "mtn492ybb1": {
+              "value": "23.304,21",
+              "value_raw": "23.304,21",
+              "value_code": null
+            }
+          }
+        },
+        {
+          "label": "Aceh Singkil",
+          "label_raw": "Aceh Singkil",
+          "satuan": null,
+          "kode_wilayah": 1102000,
+          "variables": {
+            "qjt4tgvtld": {
+              "value": "477,29",
+              "value_raw": "477,29",
+              "value_code": null
+            },
+            "od6zj61thq": {
+              "value": "37,90",
+              "value_raw": "37,90",
+              "value_code": null
+            },
+            "mtn492ybb1": {
+              "value": "1.809,06",
+              "value_raw": "1.809,06",
+              "value_code": null
+            }
+          }
+        },
+        {
+          "label": "Aceh",
+          "label_raw": "Aceh",
+          "satuan": null,
+          "kode_wilayah": 1100000,
+          "variables": {
+            "qjt4tgvtld": {
+              "value": "301.196,35",
+              "value_raw": "301.196,35",
+              "value_code": null
+            },
+            "od6zj61thq": {
+              "value": "55,11",
+              "value_raw": "55,11",
+              "value_code": null
+            },
+            "mtn492ybb1": {
+              "value": "1.659.966,28",
+              "value_raw": "1.659.966,28",
+              "value_code": null
+            }
+          }
+        }
+      ],
+      "catatan": "",
+      "sumber": "&lt;p&gt;Luas Panen, Produksi, dan Produktivitas Padi Menurut Provinsi, 2024&lt;/p&gt;",
+      "versi": 1,
+      "table_created": "2025-02-12 09:54:26",
+      "status": 200,
+      "condition": "OK",
+      "message": "-",
+      "created": "2025-10-19 18:00:31"
+    }
+  ]
+}

@@ -47,26 +47,7 @@
     try {
       let allData = [];
 
-      // === 1️⃣ Ambil data dari API Satu Data Aceh Utara ===
-      const urlSatuData =
-        "https://satudata.acehutara.go.id/api/3/action/datastore_search?resource_id=559e8bea-c48b-4bda-adbf-5fc146c160ec&limit=500";
-      const resSatuData = await fetch(urlSatuData);
-      const jsonSatuData = await resSatuData.json();
-
-      if (resSatuData.ok && jsonSatuData.success) {
-        const dataSatuData = jsonSatuData.result.records.map((r) => ({
-          kecamatan: r.kemendagri_nama_kecamatan || "-",
-          komoditas: r.komotditi || "-",
-          luas: parseFloat((r.luas_panen || "0").toString().replace(",", ".")),
-          tahun: r.tahun || "2023",
-          satuan: "Ha",
-          sumber: "Satu Data",
-        }));
-        console.log("✅ Satu Data:", dataSatuData.length);
-        allData = allData.concat(dataSatuData);
-      }
-
-      // Tahun dinamis (misal 2020 s.d. tahun sekarang)
+      // Tahun dinamis
       const currentYear = new Date().getFullYear();
       const startYear = 2020;
       const years = Array.from(
@@ -74,67 +55,67 @@
         (_, i) => startYear + i
       );
 
-      // Template endpoint
+      // === Template umum BPS ===
       const baseURL =
         "https://webapi.bps.go.id/v1/api/interoperabilitas/datasource/simdasi/id/25";
-      const wilayah = "1111000";
       const key = "9a994cbfdcba3e84dbe9eceba615a65f";
 
-      // ID tabel untuk luas dan produksi
-      const idTabelLuas = "bXNVb1pmZndqUDhKWElUSjhZRitidz09";
-      const idTabelProduksi = "eHEwRmg2VUZjY2lWNWNYaVhQK1h4QT09";
+      // === Konfigurasi per wilayah dan tabel ===
+      const configs = [
+        {
+          jenis: "luas",
+          wilayah: "1111000", // Aceh Utara
+          id_tabel: "bXNVb1pmZndqUDhKWElUSjhZRitidz09",
+        },
+        {
+          jenis: "produksi",
+          wilayah: "1111000", // Aceh Utara
+          id_tabel: "eHEwRmg2VUZjY2lWNWNYaVhQK1h4QT09",
+        },
+        {
+          jenis: "padi_provinsi",
+          wilayah: "1100000", // Aceh (Provinsi)
+          id_tabel: "ZjZ6MXlacGJNR0JaaHBPRSs0TzNUdz09",
+        },
+      ];
 
-      // 🔹 Buat dua kelompok URL dinamis
-      const urls = {
-        luas: years.map(
-          (y) =>
-            `${baseURL}/tahun/${y}/id_tabel/${idTabelLuas}/wilayah/${wilayah}/key/${key}`
-        ),
-        produksi: years.map(
-          (y) =>
-            `${baseURL}/tahun/${y}/id_tabel/${idTabelProduksi}/wilayah/${wilayah}/key/${key}`
-        ),
-      };
+      // === Buat semua URL dinamis berdasarkan tahun dan config ===
+      const urls = configs.flatMap((cfg) =>
+        years.map((y) => ({
+          jenis: cfg.jenis,
+          tahun: y,
+          url: `${baseURL}/tahun/${y}/id_tabel/${cfg.id_tabel}/wilayah/${cfg.wilayah}/key/${key}`,
+        }))
+      );
 
-      const results = await Promise.all([
-        // gabungkan luas + produksi
-        ...urls.luas.map((url, i) =>
-          fetch(url)
+      // === Fetch semua API sekaligus ===
+      const results = await Promise.all(
+        urls.map((u) =>
+          fetch(u.url)
             .then((r) => r.json().catch(() => null))
-            .then((j) => ({ jenis: "luas", tahun: years[i], json: j }))
-        ),
-        ...urls.produksi.map((url, i) =>
-          fetch(url)
-            .then((r) => r.json().catch(() => null))
-            .then((j) => ({ jenis: "produksi", tahun: years[i], json: j }))
-        ),
-      ]);
+            .then((j) => ({ jenis: u.jenis, tahun: u.tahun, json: j }))
+        )
+      );
 
+      // === Loop hasil dan gabungkan ke allData ===
       for (const { jenis, tahun, json } of results) {
         if (!json || !json.data || !json.data[1]) continue;
         const tabel = json.data[1];
         const rows = tabel.data || [];
         const kolom = tabel.kolom || {};
         const sumber = `BPS ${tahun} (${jenis})`;
-
         const dataParsed = [];
 
         rows.forEach((kec) => {
-          const namaKec = (kec.label || "-").trim();
+          const namaWil = (kec.label || "-").trim();
           const vars = kec.variables || {};
 
           for (const kodeVar in vars) {
             if (!kolom[kodeVar]) continue;
             const meta = kolom[kodeVar];
-            let komoditasRaw =
+
+            let komoditas =
               meta.nama_variabel?.replace(/\(.*?\)/g, "").trim() || "-";
-
-            // 🔧 Hapus awalan “Luas Panen” / “Produksi” biar komoditas gabung
-            let komoditas = komoditasRaw
-              .replace(/^Luas\s*Panen\s*/i, "")
-              .replace(/^Produksi\s*/i, "")
-              .trim();
-
             let rawVal =
               vars[kodeVar]?.value ?? vars[kodeVar]?.v ?? vars[kodeVar] ?? 0;
             let val =
@@ -148,15 +129,13 @@
             if ((meta.satuan || "").toLowerCase().includes("m<sup>2"))
               val /= 10000;
 
-            // Cari data komoditas yang sudah ada
+            // cari existing
             let existing = dataParsed.find(
-              (d) => d.kecamatan === namaKec && d.komoditas === komoditas
+              (d) => d.kecamatan === namaWil && d.komoditas === komoditas
             );
-
-            // Jika belum ada, buat baru
             if (!existing) {
               existing = {
-                kecamatan: namaKec,
+                kecamatan: namaWil,
                 komoditas,
                 tahun,
                 satuan: meta.satuan || "-",
@@ -165,18 +144,22 @@
               dataParsed.push(existing);
             }
 
-            // Masukkan ke kolom luas atau produksi
-            if (jenis === "produksi") {
-              existing.produksi = (existing.produksi || 0) + val;
-            } else {
-              existing.luas = (existing.luas || 0) + val;
-            }
+            // masukkan ke kolom sesuai jenis
+            if (jenis.includes("produksi")) existing.produksi = val;
+            else if (jenis.includes("luas")) existing.luas = val;
+            else existing.nilai = val; // misalnya padi_provinsi
           }
         });
-
-        allData = allData.concat(dataParsed);
+        if (jenis === "padi_provinsi") {
+          window.dataPadiProvinsi = (window.dataPadiProvinsi || []).concat(
+            dataParsed
+          );
+        } else {
+          allData = allData.concat(dataParsed);
+        }
       }
 
+      
       console.log("📊 Total data gabungan:", allData.length);
       window.allData = allData;
 
