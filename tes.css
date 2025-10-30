@@ -1,0 +1,185 @@
+/* === PIE & MAP === */
+#pieChart {
+    width: 100%;
+    height: 100% !important;
+}
+
+#mapLegend {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    gap: 4px 8px;
+    font-size: 12px;
+}
+
+#mapLegend .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    white-space: nowrap;
+}
+
+#mapLegend .legend-color {
+    width: 14px;
+    height: 14px;
+    border-radius: 2px;
+    border: 1px solid #aaa;
+}
+
+/* === KPI CARD === */
+.kpi-card {
+    font-size: 0.75rem;
+    /* semula 0.9rem */
+    padding: 0.6em;
+    /* sedikit lebih kecil */
+    height: auto;
+}
+
+.kpi-card .card-value {
+    font-size: 1.2rem;
+    /* semula 1.5rem */
+    font-weight: 700;
+}
+
+.kpi-card small {
+    font-size: 0.65rem;
+    /* semula 0.75rem */
+}
+
+.kpi-card .card-text {
+    font-size: 0.7rem;
+    /* semula 0.8rem */
+    margin-top: 0.15rem;
+}
+
+.kpi-card .icon {
+    font-size: 180%;
+    /* semula 220% */
+    opacity: 0.12;
+    /* sedikit redup agar lebih lembut */
+}
+
+/* === GRID KPI RESPONSIVE (2 baris × 3 kolom) === */
+@media (min-width: 768px) {
+    .row.mb-3.text-center>.col-md-2 {
+        flex: 0 0 33.3333%;
+        max-width: 33.3333%;
+        margin-bottom: 12px;
+    }
+}
+
+@media (max-width: 767px) {
+    .row.mb-3.text-center>.col-md-2 {
+        flex: 0 0 100%;
+        max-width: 100%;
+        margin-bottom: 8px;
+    }
+}
+
+/* === KPI COLORS (biarkan tetap sama) === */
+.orange {
+    background: #ffc241;
+    color: #fff;
+}
+
+.purple {
+    background: #886ab5;
+    color: #fff;
+}
+
+.grey-dark {
+    background: #495057;
+    color: #efefef;
+}
+
+.red {
+    background: #a83b3b;
+    color: #fff;
+}
+
+.green {
+    background: #28a745;
+    color: #fff;
+}
+
+.blue {
+    background: #007bff;
+    color: #fff;
+}
+
+/* === Tambahan agar kpi-card lebih rapi === */
+.kpi-card {
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease;
+}
+
+.kpi-card:hover {
+    transform: scale(1.02);
+}
+
+/* === TABLE FILTER (tanpa label) === */
+#filters {
+    display: flex;
+    flex-wrap: wrap;
+    /* biar responsif */
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+#filters .col-md-4 {
+    flex: 1;
+    min-width: 180px;
+    /* biar nggak terlalu sempit di HP */
+}
+
+#filters select {
+    padding: 6px 10px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 14px;
+    background: #fff;
+    cursor: pointer;
+    font-weight: normal;
+}
+
+/* Opsi pertama jadi placeholder */
+#filters select option:first-child {
+    font-style: italic;
+    /* opsional, biar beda */
+    color: #666;
+    /* abu-abu */
+}
+
+/* === PAGINATION === */
+.pagination {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 15px;
+    justify-content: center;
+}
+
+.pagination button {
+    padding: 6px 12px;
+    border: 1px solid #ddd;
+    background: #f9f9f9;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.pagination button:hover {
+    background: #007bff;
+    color: #fff;
+    border-color: #007bff;
+}
+
+.pagination button.active {
+    background: #007bff;
+    color: white;
+    font-weight: bold;
+}
+
+.card-header {
+    display: none !important;
+}

@@ -501,7 +501,7 @@ function renderVertikalBarChart(filtered) {
     },
     colors: arr.map((d) => window.kecamatanColors?.[d.kecamatan] || "#43A047"),
     legend: { show: false },
-    noData: { text: "Tidak ada data produksi" },
+    noData: { text: "Tidak ada data" },
   });
 
   vertikalBarChart.render();
@@ -511,36 +511,64 @@ function renderVertikalBarChart(filtered) {
 // KPI
 // ================================
 function updateKPI(filtered, allData) {
-  const sourceData = (filtered.length ? filtered : allData).filter(
-    (d) => d.kecamatan !== "Aceh Utara"
-  );
+  // ✅ Filter sumber data KPI
+  const sourceData = (filtered.length ? filtered : allData)
+    // Hanya ambil data dengan tingkat = 'kecamatan'
+    .filter((d) => d.tingkat === "kecamatan")
+    // Kecualikan Aceh Utara (jika tidak ingin dihitung)
+    .filter((d) => d.kecamatan && d.kecamatan !== "Aceh Utara")
+    // Kecualikan data dari API padi_provinsi
+    .filter((d) => !(d.jenis === "padi_provinsi" && d.wilayah === "1100000"));
 
-  const totalLuas = sourceData.reduce(
-    (s, r) => s + truncate4(normalizeLuas(r)),
+  // Jika tidak ada data tersisa, hentikan
+  if (!sourceData.length) {
+    console.warn("⚠️ Tidak ada data KPI yang valid (semua terfilter)");
+    return;
+  }
+
+  // 1️⃣ Total Luas (Ha)
+  const totalLuas = sourceData.reduce((sum, r) => sum + normalizeLuas(r), 0);
+
+  // 2️⃣ Total Produksi (Kw)
+  const totalProduksi = sourceData.reduce(
+    (sum, r) => sum + normalizeProduksi(r),
     0
   );
-  $("#totalLuas").text(formatNumber(totalLuas, 2));
 
+  // 3️⃣ Kecamatan Terluas
   const kecAgg = {};
-  sourceData
-    .filter((r) => r.tingkat !== "kabupaten") // abaikan yang tingkatnya kabupaten
-    .forEach((r) => {
-      kecAgg[r.kecamatan] = (kecAgg[r.kecamatan] || 0) + normalizeLuas(r);
-    });
-
+  sourceData.forEach((r) => {
+    if (!r.kecamatan) return;
+    kecAgg[r.kecamatan] = (kecAgg[r.kecamatan] || 0) + normalizeLuas(r);
+  });
   const kecTerluas = Object.entries(kecAgg).sort((a, b) => b[1] - a[1])[0];
+
+  // 4️⃣ Komoditas Dominan (luas terbesar)
+  const komAgg = {};
+  sourceData.forEach((r) => {
+    if (!r.komoditas) return;
+    komAgg[r.komoditas] = (komAgg[r.komoditas] || 0) + normalizeLuas(r);
+  });
+  const komDominan = Object.entries(komAgg).sort((a, b) => b[1] - a[1])[0];
+
+  // 5️⃣ Rata-rata Produksi per Tahun
+  const tahunSet = new Set(sourceData.map((d) => d.tahun));
+  const rataProduksi = totalProduksi / (tahunSet.size || 1);
+
+  // 6️⃣ Jumlah Kecamatan Aktif
+  const jumlahKecamatan = Object.keys(kecAgg).length;
+
+  // 🧭 Update tampilan KPI
+  $("#totalLuas").text(formatNumber(totalLuas, 2));
+  $("#totalProduksi").text(formatNumber(totalProduksi, 2));
   $("#kecTerluas").text(
     kecTerluas ? `${kecTerluas[0]} (${formatNumber(kecTerluas[1], 2)} Ha)` : "-"
   );
-
-  const komAgg = {};
-  sourceData.forEach((r) => {
-    komAgg[r.komoditas] = (komAgg[r.komoditas] || 0) + normalizeLuas(r);
-  });
-  const komTerluas = Object.entries(komAgg).sort((a, b) => b[1] - a[1])[0];
-  $("#komTerluas").text(
-    komTerluas ? `${komTerluas[0]} (${formatNumber(komTerluas[1], 2)} Ha)` : "-"
+  $("#komDominan").text(
+    komDominan ? `${komDominan[0]} (${formatNumber(komDominan[1], 2)} Ha)` : "-"
   );
+  $("#rataProduksi").text(formatNumber(rataProduksi, 2));
+  $("#jumlahKecamatan").text(jumlahKecamatan);
 }
 
 // ================================
@@ -564,7 +592,7 @@ function normalizeProduksi(item) {
 }
 
 function renderStackedBarChartKomoditas(filtered) {
-  const el = document.querySelector("#lineChartKomoditas");
+  const el = document.querySelector("#stackedChart");
   if (!el) return;
 
   const filteredKec = filtered.filter(
@@ -715,6 +743,7 @@ function renderStackedBarChartKomoditas(filtered) {
     },
     fill: { opacity: 0.85 },
     dataLabels: { enabled: false },
+    noData: { text: "Tidak ada data" },
   });
 
   window.stackedBarChartKomoditas.render();
