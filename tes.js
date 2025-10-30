@@ -522,9 +522,12 @@ function updateKPI(filtered, allData) {
   $("#totalLuas").text(formatNumber(totalLuas, 2));
 
   const kecAgg = {};
-  sourceData.forEach((r) => {
-    kecAgg[r.kecamatan] = (kecAgg[r.kecamatan] || 0) + normalizeLuas(r);
-  });
+  sourceData
+    .filter((r) => r.tingkat !== "kabupaten") // abaikan yang tingkatnya kabupaten
+    .forEach((r) => {
+      kecAgg[r.kecamatan] = (kecAgg[r.kecamatan] || 0) + normalizeLuas(r);
+    });
+
   const kecTerluas = Object.entries(kecAgg).sort((a, b) => b[1] - a[1])[0];
   $("#kecTerluas").text(
     kecTerluas ? `${kecTerluas[0]} (${formatNumber(kecTerluas[1], 2)} Ha)` : "-"
