@@ -141,6 +141,13 @@
 
             let komoditas =
               meta.nama_variabel?.replace(/\(.*?\)/g, "").trim() || "-";
+
+            // Hapus kata "Luas Panen" atau "Produksi" di depan nama komoditas
+            komoditas = komoditas
+              .replace(/^Luas\s*Panen\s*/i, "")
+              .replace(/^Produksi\s*/i, "")
+              .trim();
+
             let rawVal =
               vars[kodeVar]?.value ?? vars[kodeVar]?.v ?? vars[kodeVar] ?? 0;
             let val =
@@ -185,9 +192,28 @@
       }
 
       // ================================
-      // 7. Data Siap Digunakan
+      // 7. Gabungkan data luas + produksi berdasarkan wilayah, komoditas, dan tahun
       // ================================
-      console.log("✅ Data Sayuran & Buah:", dataSayurBuah);
+      const mergedData = [];
+      const mapKey = {};
+
+      dataSayurBuah.forEach((d) => {
+        const key = `${d.wilayah}-${d.komoditas}-${d.tahun}`;
+        if (!mapKey[key]) {
+          mapKey[key] = { ...d };
+        } else {
+          mapKey[key].luas = d.luas || mapKey[key].luas || 0;
+          mapKey[key].produksi = d.produksi || mapKey[key].produksi || 0;
+        }
+      });
+
+      for (const key in mapKey) mergedData.push(mapKey[key]);
+
+      // Simpan ke window agar bisa diakses global
+      window.dataSayurBuah = mergedData;
+      window.dataPadiProvinsi = dataPadiProvinsi;
+
+      console.log("✅ Data Sayuran & Buah (Gabungan):", mergedData);
       console.log("✅ Data Padi Provinsi:", dataPadiProvinsi);
 
       // === 2. Judul & breadcrumb ===
@@ -280,6 +306,7 @@
 
 <!-- 🗺️ PETA & GRAFIK -->
 <div class="row mb-3">
+  <!-- 📊 Grafik Bar -->
   <div class="col-lg-6 d-flex">
     <div class="card shadow-sm flex-fill">
       <div class="card-body">
@@ -290,15 +317,26 @@
       </div>
     </div>
   </div>
+
+  <!-- 🗺️ Peta Aceh Utara -->
   <div class="col-lg-6 d-flex">
-  <div class="card shadow-sm flex-fill">
-    <div class="card-body">
-      <h6 class="text-center fw-bold" style="margin-bottom: 40px">Peta Kabupaten Aceh Utara</h6>
-      <div id="mapContainer" style="height: 400px"></div>
-      <div id="mapLegend" class="mt-2"></div>
+    <div class="card shadow-sm flex-fill">
+      <div class="card-body">
+        <h6 class="text-center fw-bold mb-4">Peta Kabupaten Aceh Utara</h6>
+
+        <!-- Peta -->
+        <div id="mapContainer" style="height: 400px"></div>
+
+        <!-- 📍 Info data dari klik kecamatan -->
+        <div id="mapDataInfoCard" class="mt-3 p-3 border rounded shadow-sm bg-light">
+          <h6 class="fw-semibold mb-2">📍 Data Kecamatan</h6>
+          <div id="mapDataInfo" class="text-muted">
+            Klik kecamatan pada peta untuk melihat data luas dan produksi.
+          </div>
+        </div>
+      </div>
     </div>
   </div>
-</div>
 </div>
 
 <!-- 📊 PIE & Treemap -->
@@ -380,9 +418,6 @@
         console.log("✅ Data Sayuran & Buah:", dataSayurBuah.length);
         console.log("✅ Data Padi Provinsi:", dataPadiProvinsi.length);
         console.log("📊 Jumlah record:", allData.length);
-
-        // render dashboard
-        initDashboard(allData);
 
         // render dashboard
         initDashboard(allData);

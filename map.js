@@ -3,7 +3,7 @@ function renderMap() {
     window.myMap.destroy();
   }
 
-  /// 27 warna cerah bervariasi
+  // === Warna cerah bervariasi ===
   window.colors = [
     "#e6194b",
     "#3cb44b",
@@ -36,9 +36,7 @@ function renderMap() {
 
   // Buat object scale {1: warna1, 2: warna2, ...}
   const scale = {};
-  window.colors.forEach((c, i) => {
-    scale[i + 1] = c;
-  });
+  window.colors.forEach((c, i) => (scale[i + 1] = c));
 
   // Mapping ID → Nama Kecamatan
   window.kecamatanNames = {
@@ -71,7 +69,7 @@ function renderMap() {
     "11.08_kecamatan_path_26": "Nisam Antara",
   };
 
-  // Render map
+  // === Render map ===
   window.myMap = new jsVectorMap({
     selector: "#mapContainer",
     map: "aceh-utara",
@@ -83,51 +81,127 @@ function renderMap() {
     series: {
       regions: [{ attribute: "fill", scale: scale, values: {} }],
     },
+
+    // === EVENT: Saat klik kecamatan ===
     onRegionClick(event, code) {
+      const regionName = window.kecamatanNames[code] || code;
+      console.log("🖱️ Klik kecamatan:", regionName);
+
+      const infoDiv = document.getElementById("mapDataInfo");
+      if (!infoDiv) return;
+
+      const allData = window.dataSayurBuah || [];
+      const dataWilayah = allData.filter(
+        (d) => d.wilayah.toLowerCase() === regionName.toLowerCase()
+      );
+
+      if (dataWilayah.length === 0) {
+        infoDiv.innerHTML = `
+      <h6 class="fw-semibold mb-2">${regionName}</h6>
+      <span class="text-danger">Data tidak ditemukan di dataSayurBuah.</span>
+    `;
+        return;
+      }
+
+      // 🔹 Gabungkan berdasarkan komoditas + tahun
+      const gabung = {};
+      dataWilayah.forEach((d) => {
+        const key = `${d.komoditas}-${d.tahun}`;
+        if (!gabung[key]) {
+          gabung[key] = {
+            komoditas: d.komoditas,
+            tahun: d.tahun,
+            luas: d.luas || 0,
+            produksi: d.produksi || 0,
+            sumber: d.sumber || "-",
+          };
+        } else {
+          gabung[key].luas = d.luas || gabung[key].luas;
+          gabung[key].produksi = d.produksi || gabung[key].produksi;
+        }
+      });
+
+      const dataGabung = Object.values(gabung);
+
+      // 🔹 Cari komoditas dengan produksi tertinggi
+      const maxProduksi = Math.max(...dataGabung.map((d) => d.produksi || 0));
+      const dataTertinggi = dataGabung.find(
+        (d) => (d.produksi || 0) === maxProduksi
+      );
+
+      infoDiv.innerHTML = `
+    <h6 class="fw-semibold mb-2">📍 ${regionName}</h6>
+    <div class="mb-2">
+      🥦 <b>Komoditas Tertinggi:</b> ${dataTertinggi.komoditas}<br>
+      🌾 <b>Luas:</b> ${dataTertinggi.luas.toLocaleString()} Ha<br>
+      🌿 <b>Produksi:</b> ${dataTertinggi.produksi.toLocaleString()} Kw<br>
+      📅 <b>Tahun:</b> ${dataTertinggi.tahun}
+    </div>
+    <small class="text-muted">Sumber: ${dataTertinggi.sumber}</small>
+  `;
+    },
+
+    // === EVENT: Hover tooltip ===
+    onRegionTooltipShow(event, tooltip, code) {
       const nama = window.kecamatanNames[code] || code;
-      console.log("Klik kecamatan:", nama);
+      const dataWilayah = (window.dataSayurBuah || []).filter(
+        (d) => d.wilayah.toLowerCase() === nama.toLowerCase()
+      );
+
+      let info = `<b>${nama}</b><br><em>Data tidak tersedia</em>`;
+      if (dataWilayah.length > 0) {
+        const totalLuas = dataWilayah.reduce(
+          (sum, d) => sum + (d.luas || 0),
+          0
+        );
+        const totalProduksi = dataWilayah.reduce(
+          (sum, d) => sum + (d.produksi || 0),
+          0
+        );
+        info = `
+          <b>${nama}</b><br>
+          🌾 Luas: ${totalLuas.toLocaleString()} Ha<br>
+          🌿 Produksi: ${totalProduksi.toLocaleString()} Kw
+        `;
+      }
+
+      tooltip.innerHTML = info;
     },
   });
 
-  // Ambil semua region ID
+  // === Pewarnaan acak per kecamatan ===
   const values = {};
   const regionIds = Object.keys(window.myMap.regions);
-  window.regionIds = regionIds; // simpan global
-
-  regionIds.forEach((id, i) => {
-    values[id] = (i % window.colors.length) + 1;
-  });
-
+  regionIds.forEach((id, i) => (values[id] = (i % window.colors.length) + 1));
   window.myMap.series.regions[0].setValues(values);
 
-  // === Simpan mapping nama kecamatan → warna global (agar chart bisa pakai) ===
+  // === Simpan warna global untuk chart ===
   window.kecamatanColors = {};
   regionIds.forEach((id, i) => {
     const nama = window.kecamatanNames[id];
     const warna = window.colors[i % window.colors.length];
     if (nama) window.kecamatanColors[nama] = warna;
   });
-  console.log("✅ Mapping warna kecamatan:", window.kecamatanColors);
 
-  // ==== Bikin legend di bawah map ====
+  // === Legend bawah map ===
   const legendContainer = document.getElementById("mapLegend");
-  legendContainer.innerHTML = "";
+  if (legendContainer) {
+    legendContainer.innerHTML = "";
+    regionIds.forEach((id, i) => {
+      const item = document.createElement("div");
+      item.className = "legend-item";
+      const nama = window.kecamatanNames[id] || id;
+      item.innerHTML = `
+        <div class="legend-color" style="background:${
+          window.colors[i % window.colors.length]
+        }"></div>
+        <span>${nama}</span>
+      `;
+      legendContainer.appendChild(item);
+    });
+  }
 
-  regionIds.forEach((id, i) => {
-    const item = document.createElement("div");
-    item.className = "legend-item";
-    const nama = window.kecamatanNames[id] || id;
-    item.innerHTML = `
-      <div class="legend-color" style="background:${
-        window.colors[i % window.colors.length]
-      }"></div>
-      <span>${nama}</span>
-    `;
-    legendContainer.appendChild(item);
-  });
-
-  console.log("Daftar ID kecamatan:", regionIds);
-  // === Tambahan agar dashboard tahu map sudah siap ===
+  // === Sinyal bahwa map sudah siap ===
   window.mapReady = true;
   window.dispatchEvent(new Event("mapReady"));
 }

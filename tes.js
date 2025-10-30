@@ -317,28 +317,45 @@ function renderCharts(filteredData) {
   const luas = filteredData.filter(
     (d) =>
       /padi/i.test(d.komoditas) &&
-      /luas panen/i.test(d.komoditas) &&
-      d.kecamatan === "Aceh Utara"
+      (d.jenis?.toLowerCase().includes("luas") ||
+        d.komoditas.toLowerCase().includes("luas") ||
+        d.indikator?.toLowerCase().includes("luas") ||
+        d.satuan?.toLowerCase().includes("ha") || // 🔹 tambahkan ini
+        parseNumber(d.nilai) > 0) && // 🔹 pastikan nilai > 0
+      (d.kecamatan === "Aceh Utara" || d.wilayah === "Aceh Utara")
+  );
+
+  console.log(
+    "📌 Cek nilai luas:",
+    filteredData.map((d) => ({
+      komoditas: d.komoditas,
+      nilai: d.nilai,
+      satuan: d.satuan,
+      hasil: normalizeLuas(d),
+    }))
   );
 
   const produksi = filteredData.filter(
     (d) =>
       /padi/i.test(d.komoditas) &&
-      /produksi/i.test(d.komoditas) &&
-      d.kecamatan === "Aceh Utara"
+      (d.jenis?.toLowerCase().includes("produksi") ||
+        d.komoditas.toLowerCase().includes("produksi") ||
+        d.indikator?.toLowerCase().includes("produksi")) &&
+      (d.kecamatan === "Aceh Utara" || d.wilayah === "Aceh Utara")
   );
 
   const years = Array.from(
-    new Set(
-      [...luas, ...produksi]
-        .map((d) => parseInt(d.tahun))
-        .filter((t) => !isNaN(t))
-    )
+    new Set([...luas.map((d) => d.tahun), ...produksi.map((d) => d.tahun)])
   ).sort((a, b) => a - b);
 
-  const luasSeries = years.map(
-    (y) => normalizeLuas(luas.find((d) => +d.tahun === y)) || 0
-  );
+  const luasSeries = years.map((y) => {
+    const d = luas.find((d) => +d.tahun === y);
+    if (!d) {
+      console.warn(`Data untuk tahun ${y} tidak ditemukan`);
+      return 0;
+    }
+    return normalizeLuas(d);
+  });
   const produksiSeries = years.map(
     (y) => produksi.find((d) => +d.tahun === y)?.nilai || 0
   );
