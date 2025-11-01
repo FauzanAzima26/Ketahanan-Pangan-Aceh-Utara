@@ -315,13 +315,23 @@
         <!-- Peta -->
         <div id="mapContainer" style="height: 400px"></div>
 
-        <!-- 📍 Info data dari klik kecamatan -->
-        <div id="mapDataInfoCard" class="mt-3 p-3 border rounded shadow-sm bg-light">
-          <h6 class="fw-semibold mb-2">📍 Data Kecamatan</h6>
-          <div id="mapDataInfo" class="text-muted">
-            Klik kecamatan pada peta untuk melihat data luas dan produksi.
-          </div>
-        </div>
+        <!-- 📍 Modal Info Kecamatan -->
+<div class="modal fade" id="mapDataModal" tabindex="-1" aria-labelledby="mapDataModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content shadow-lg">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title fw-bold" id="mapDataModalLabel">📍 Data Kecamatan</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body" id="mapDataInfo">
+        Klik kecamatan pada peta untuk melihat data luas dan produksi.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+      </div>
+    </div>
+  </div>
+</div>
       </div>
     </div>
   </div>

@@ -85,11 +85,10 @@ function renderMap() {
     // === EVENT: Saat klik kecamatan ===
     onRegionClick(event, code) {
       const regionName = window.kecamatanNames[code] || code;
-      console.log("🖱️ Klik kecamatan:", regionName);
-
       const infoDiv = document.getElementById("mapDataInfo");
-      if (!infoDiv) return;
-
+      const modal = new bootstrap.Modal(
+        document.getElementById("mapDataModal")
+      );
       const allData = window.dataSayurBuah || [];
       const dataWilayah = allData.filter(
         (d) => d.wilayah.toLowerCase() === regionName.toLowerCase()
@@ -100,10 +99,11 @@ function renderMap() {
       <h6 class="fw-semibold mb-2">${regionName}</h6>
       <span class="text-danger">Data tidak ditemukan di dataSayurBuah.</span>
     `;
+        modal.show();
         return;
       }
 
-      // 🔹 Gabungkan berdasarkan komoditas + tahun
+      // Gabungkan dan tampilkan data tertinggi
       const gabung = {};
       dataWilayah.forEach((d) => {
         const key = `${d.komoditas}-${d.tahun}`;
@@ -115,30 +115,28 @@ function renderMap() {
             produksi: d.produksi || 0,
             sumber: d.sumber || "-",
           };
-        } else {
-          gabung[key].luas = d.luas || gabung[key].luas;
-          gabung[key].produksi = d.produksi || gabung[key].produksi;
         }
       });
 
       const dataGabung = Object.values(gabung);
-
-      // 🔹 Cari komoditas dengan produksi tertinggi
       const maxProduksi = Math.max(...dataGabung.map((d) => d.produksi || 0));
       const dataTertinggi = dataGabung.find(
         (d) => (d.produksi || 0) === maxProduksi
       );
 
       infoDiv.innerHTML = `
-    <h6 class="fw-semibold mb-2">📍 ${regionName}</h6>
-    <div class="mb-2">
+    <h6 class="fw-semibold mb-2">${regionName}</h6>
+    <p>
       🥦 <b>Komoditas Tertinggi:</b> ${dataTertinggi.komoditas}<br>
       🌾 <b>Luas:</b> ${dataTertinggi.luas.toLocaleString()} Ha<br>
       🌿 <b>Produksi:</b> ${dataTertinggi.produksi.toLocaleString()} Kw<br>
       📅 <b>Tahun:</b> ${dataTertinggi.tahun}
-    </div>
+    </p>
     <small class="text-muted">Sumber: ${dataTertinggi.sumber}</small>
   `;
+
+      // 🔹 Tampilkan modal
+      modal.show();
     },
 
     // === EVENT: Hover tooltip ===
