@@ -488,7 +488,7 @@ function renderVertikalBarChart(filtered) {
     series: [{ name: "Produksi (Kw)", data: arr.map((d) => d.total) }],
     xaxis: {
       categories: arr.map((d) => d.kecamatan),
-      title: { text: "Nama Kecamatan" },
+      title: { text: "Kecamatan" },
       labels: { rotate: -30, style: { fontSize: "12px", fontWeight: 500 } },
     },
     yaxis: {
@@ -727,6 +727,7 @@ function renderStackedBarChartKomoditas(filtered) {
     },
     xaxis: {
       categories: topKomoditas,
+      title: { text: "Komoditas" },
       labels: {
         rotate: -30,
         style: { fontSize: "12px" },
@@ -736,7 +737,7 @@ function renderStackedBarChartKomoditas(filtered) {
       title: { text: "Produksi (Kwintal)" },
       labels: { formatter: (val) => formatNumber(val, 0) },
     },
-    legend: { position: "bottom" },
+    legend: { position: "top" },
     tooltip: {
       y: {
         formatter: function (val, opts) {
