@@ -30,6 +30,11 @@ function generateDynamicTitle(baseTitle, unit = "Ha") {
     document.querySelector("#filterKomoditas")?.value || "";
   const selectedTahun = document.querySelector("#filterTahun")?.value || "";
   const selectedJenis = document.querySelector("#filterJenis")?.value || "";
+  $("#filterKomoditas option").each(function () {
+    if ($(this).text().toLowerCase().includes("jamur")) {
+      $(this).remove();
+    }
+  });
 
   // Awalan: pastikan kapitalisasi konsisten
   let title = baseTitle.trim();
@@ -40,7 +45,10 @@ function generateDynamicTitle(baseTitle, unit = "Ha") {
   // Siapkan tambahan detail
   const detailParts = [];
   if (selectedKecamatan) detailParts.push(`Kecamatan ${selectedKecamatan}`);
-  if (selectedKomoditas) detailParts.push(`Komoditas ${selectedKomoditas}`);
+  if (selectedKomoditas && !selectedKomoditas.toLowerCase().includes("jamur")) {
+    detailParts.push(`Komoditas ${selectedKomoditas}`);
+  }
+
   if (selectedTahun) detailParts.push(`Tahun ${selectedTahun}`);
 
   // Gabungkan

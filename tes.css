@@ -28,7 +28,8 @@
 /* === KPI CONTAINER (3 kolom di desktop, adaptif di mobile) === */
 .kpi-container {
   display: grid;
-  grid-template-columns: repeat(3, 1fr); /* default 3 kolom */
+  grid-template-columns: repeat(3, 1fr);
+  /* default 3 kolom */
   gap: 12px;
   margin-bottom: 15px;
 }
@@ -87,12 +88,35 @@
 }
 
 /* === Warna KPI === */
-.orange { background: #ffc241; color: #fff; }
-.purple { background: #886ab5; color: #fff; }
-.grey-dark { background: #495057; color: #efefef; }
-.red { background: #a83b3b; color: #fff; }
-.green { background: #28a745; color: #fff; }
-.blue { background: #007bff; color: #fff; }
+.orange {
+  background: #ffc241 !important;
+  color: #fff !important;
+}
+
+.purple {
+  background: #886ab5 !important;
+  color: #fff !important;
+}
+
+.grey-dark {
+  background: #495057 !important;
+  color: #efefef !important;
+}
+
+.red {
+  background: #a83b3b !important;
+  color: #fff !important;
+}
+
+.green {
+  background: #28a745 !important;
+  color: #fff !important;
+}
+
+.blue {
+  background: #007bff !important;
+  color: #fff !important;
+}
 
 /* === FILTER === */
 #filters {
@@ -154,4 +178,31 @@
 
 .card-header {
   display: none !important;
+}
+
+.running-text-container {
+  overflow: hidden;
+  white-space: nowrap;
+  width: 100%;
+  background: #f8f9fa;
+  border-top: 2px solid #0d9344;
+  padding: 8px 0;
+}
+
+.running-text {
+  display: inline-block;
+  color: #0d9344;
+  font-weight: 600;
+  font-size: 18px;
+  animation: scrollLeft 15s linear infinite;
+}
+
+@keyframes scrollLeft {
+  0% {
+    transform: translateX(100%);
+  }
+
+  100% {
+    transform: translateX(-100%);
+  }
 }
