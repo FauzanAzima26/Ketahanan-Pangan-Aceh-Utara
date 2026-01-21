@@ -84,58 +84,95 @@ function renderMap() {
 
     // === EVENT: Saat klik kecamatan ===
     onRegionClick(event, code) {
+      const selectedKomoditas =
+        document.querySelector("#filterKomoditas")?.value || "";
+      const selectedTahun = document.querySelector("#filterTahun")?.value || "";
+
       const regionName = window.kecamatanNames[code] || code;
       const infoDiv = document.getElementById("mapDataInfo");
       const modal = new bootstrap.Modal(
-        document.getElementById("mapDataModal")
-      );
-      const allData = window.dataSayurBuah || [];
-      const dataWilayah = allData.filter(
-        (d) => d.wilayah.toLowerCase() === regionName.toLowerCase()
+        document.getElementById("mapDataModal"),
       );
 
+      const allData = window.filteredData || window.dataSayurBuah || [];
+
+      // === Filter data wilayah ===
+      const dataWilayah = allData.filter((d) => {
+        const matchWilayah =
+          d.wilayah && d.wilayah.toLowerCase() === regionName.toLowerCase();
+
+        const matchKomoditas =
+          !selectedKomoditas || d.komoditas === selectedKomoditas;
+
+        const matchTahun =
+          !selectedTahun || String(d.tahun) === String(selectedTahun);
+
+        return matchWilayah && matchKomoditas && matchTahun;
+      });
+
+      // === Jika tidak ada data ===
       if (dataWilayah.length === 0) {
         infoDiv.innerHTML = `
       <h6 class="fw-semibold mb-2">${regionName}</h6>
-      <span class="text-danger">Data tidak ditemukan di dataSayurBuah.</span>
+      <span class="text-danger">Tidak ada data sesuai filter.</span>
     `;
         modal.show();
         return;
       }
 
-      // Gabungkan dan tampilkan data tertinggi
-      const gabung = {};
-      dataWilayah.forEach((d) => {
-        const key = `${d.komoditas}-${d.tahun}`;
-        if (!gabung[key]) {
-          gabung[key] = {
-            komoditas: d.komoditas,
-            tahun: d.tahun,
-            luas: d.luas || 0,
-            produksi: d.produksi || 0,
-            sumber: d.sumber || "-",
-          };
+      // === HITUNG TOTAL ===
+      function toNumber(val) {
+        if (val instanceof HTMLElement) {
+          return Number(val.textContent) || 0;
         }
-      });
+        return Number(val) || 0;
+      }
 
-      const dataGabung = Object.values(gabung);
-      const maxProduksi = Math.max(...dataGabung.map((d) => d.produksi || 0));
-      const dataTertinggi = dataGabung.find(
-        (d) => (d.produksi || 0) === maxProduksi
+      const totalLuas = dataWilayah.reduce(
+        (sum, d) => sum + toNumber(d.luas),
+        0,
       );
 
+      const totalProduksi = dataWilayah.reduce(
+        (sum, d) => sum + toNumber(d.produksi),
+        0,
+      );
+
+      const isFiltered = selectedKomoditas && selectedTahun;
+
+      const luasText = isFiltered ? `${totalLuas.toLocaleString()} Ha` : "-";
+
+      const produksiText = isFiltered
+        ? `${totalProduksi.toLocaleString()} Kw`
+        : "-";
+
+      // === Tentukan teks komoditas & tahun ===
+      const komoditasText = selectedKomoditas || "Pilih komoditas";
+      const tahunText = selectedTahun || "Pilih tahun";
+
+      // === Isi modal ===
       infoDiv.innerHTML = `
     <h6 class="fw-semibold mb-2">${regionName}</h6>
-    <p>
-      🥦 <b>Komoditas Tertinggi:</b> ${dataTertinggi.komoditas}<br>
-      🌾 <b>Luas:</b> ${dataTertinggi.luas.toLocaleString()} Ha<br>
-      🌿 <b>Produksi:</b> ${dataTertinggi.produksi.toLocaleString()} Kw<br>
-      📅 <b>Tahun:</b> ${dataTertinggi.tahun}
-    </p>
-    <small class="text-muted">Sumber: ${dataTertinggi.sumber}</small>
+    <table class="table table-sm table-bordered mb-0">
+      <tr>
+        <th width="40%">Komoditas</th>
+        <td>${komoditasText}</td>
+      </tr>
+      <tr>
+        <th>Tahun</th>
+        <td>${tahunText}</td>
+      </tr>
+      <tr>
+        <th>Luas Panen</th>
+        <td>${luasText}</td>
+      </tr>
+      <tr>
+        <th>Produksi</th>
+        <td>${produksiText}</td>
+      </tr>
+    </table>
   `;
 
-      // 🔹 Tampilkan modal
       modal.show();
     },
 
@@ -143,18 +180,18 @@ function renderMap() {
     onRegionTooltipShow(event, tooltip, code) {
       const nama = window.kecamatanNames[code] || code;
       const dataWilayah = (window.dataSayurBuah || []).filter(
-        (d) => d.wilayah.toLowerCase() === nama.toLowerCase()
+        (d) => d.wilayah.toLowerCase() === nama.toLowerCase(),
       );
 
       let info = `<b>${nama}</b><br><em>Data tidak tersedia</em>`;
       if (dataWilayah.length > 0) {
         const totalLuas = dataWilayah.reduce(
           (sum, d) => sum + (d.luas || 0),
-          0
+          0,
         );
         const totalProduksi = dataWilayah.reduce(
           (sum, d) => sum + (d.produksi || 0),
-          0
+          0,
         );
         info = `
           <b>${nama}</b><br>
